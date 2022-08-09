@@ -1,0 +1,22 @@
+{
+    "files.associations": {
+        "*.ipp": "cpp",
+        "string_view": "cpp",
+        "tuple": "cpp",
+        "cmath": "cpp"
+    },
+    "python.autoComplete.extraPaths": [
+        "/home/twilight/project/robot/hedian_jypro/GEM_main_0804/devel/lib/python2.7/dist-packages",
+        "/opt/ros/melodic/lib/python2.7/dist-packages",
+        "/home/twilight/project/cp/CenterPoint",
+        "/home/twilight/project/cp/CenterPoint/nuscenes-devkit/python-sdk",
+        "/usr/local/opencv/opencv-3.4.8/lib/python3.6/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/twilight/project/robot/hedian_jypro/GEM_main_0804/devel/lib/python2.7/dist-packages",
+        "/opt/ros/melodic/lib/python2.7/dist-packages",
+        "/home/twilight/project/cp/CenterPoint",
+        "/home/twilight/project/cp/CenterPoint/nuscenes-devkit/python-sdk",
+        "/usr/local/opencv/opencv-3.4.8/lib/python3.6/dist-packages"
+    ]
+}

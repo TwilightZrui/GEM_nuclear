@@ -1,0 +1,57 @@
+<launch>
+  <param name="/use_sim_time" value="true" />
+
+  <!-- <arg name="input_lidar_topic" default="/os_cloud_node3/points"/> 
+  <arg name="output_lidar_topic" default="/os_cloud_node3/points_filtered"/> -->
+
+  <arg name="input_lidar_topic" default="/velodyne_points_32"/>
+  <arg name="output_lidar_topic" default="/robot_Z/pointcloud"/>
+  <!-- <arg name="input_lidar_topic" default="/rslidar_points"/>
+  <arg name="output_lidar_topic" default="/robot_Z/pointcloud"/> -->
+
+  <node pkg="nodelet" type="nodelet" name="pcl_manager_0g_x" args="manager" output="screen" />
+  <!-- Run a VoxelGrid filter to clean NaNs and downsample the data -->
+  <node pkg="nodelet" type="nodelet" name="voxel_grid_0g_x" args="load pcl/VoxelGrid pcl_manager_0g_x" output="screen">
+    <remap from="~input" to="$(arg input_lidar_topic)" />
+    <remap from="~output" to="/temp1" />
+    <rosparam>
+      filter_field_name: x
+      <!-- filter_limit_min: -8
+      filter_limit_max: 8 -->
+      filter_limit_min: -8
+      filter_limit_max: 8
+      leaf_size: 0.02
+    </rosparam>
+  </node>
+
+  <node pkg="nodelet" type="nodelet" name="pcl_manager_0g_y" args="manager" output="screen" />
+  <!-- Run a VoxelGrid filter to clean NaNs and downsample the data -->
+  <node pkg="nodelet" type="nodelet" name="voxel_grid_0g_y" args="load pcl/VoxelGrid pcl_manager_0g_y" output="screen">
+    <remap from="~input" to="/temp1" />
+    <remap from="~output" to="/temp2" />
+    <rosparam>
+      filter_field_name: y
+      <!-- filter_limit_min: -2.1
+      filter_limit_max: 0.8 -->
+      filter_limit_min: -8
+      filter_limit_max: 8
+      leaf_size: 0.02
+    </rosparam>
+  </node>
+
+  <node pkg="nodelet" type="nodelet" name="pcl_manager_0g_z" args="manager" output="screen" />
+  <!-- Run a VoxelGrid filter to clean NaNs and downsample the data -->
+  <node pkg="nodelet" type="nodelet" name="voxel_grid_0g_z" args="load pcl/VoxelGrid pcl_manager_0g_z" output="screen">
+    <remap from="~input" to="/temp2" />
+    <remap from="~output" to="$(arg output_lidar_topic)" />
+    <rosparam>
+      filter_field_name: z
+      <!-- filter_limit_min: -2
+      filter_limit_max: 1 -->
+      filter_limit_min: -5
+      filter_limit_max: 5
+      leaf_size: 0.02
+    </rosparam>
+  </node>
+
+</launch>
