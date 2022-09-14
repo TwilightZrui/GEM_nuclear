@@ -103,7 +103,7 @@ sensor_msgs::ImagePtr ElevationMap::show(ros::Time timeStamp, string robot_name,
     grid_map::Position position;
     visualMap_.getPosition(*iterator, position);
 
-    if(position.x() < 2 && position.x() > -2 && position.y() < 2 && position.y() > -2){
+    if(position.x() < 1 && position.x() > -1 && position.y() < 1 && position.y() > -1){
       visualMap_.at("elevation", *iterator) = 0.0;
       visualMap_.at("traver", *iterator) = 1.0;
     }
