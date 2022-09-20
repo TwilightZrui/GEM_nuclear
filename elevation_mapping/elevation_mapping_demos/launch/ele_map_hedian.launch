@@ -19,6 +19,7 @@
     <remap from="/voxel_grid/output" to="$(arg lidar_topic)"/>
     <remap from="/stereo_grey/left/image_raw" to="$(arg camera_topic)"/>
   
+
   </node>
 
    <!-- Launch RViz with the demo configuration -->
