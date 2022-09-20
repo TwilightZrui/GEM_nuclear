@@ -21,7 +21,7 @@ def pubImage():
         image = np.zeros((640,480,3), np.uint8)
         msg = bridge.cv2_to_imgmsg(image,"bgr8")
         msg.header.stamp = rospy.Time.now()
-        print(msg.header.stamp)
+        # print(msg.header.stamp)
         pub.publish(msg)
         # print(msg)
         #cv2.imshow("lala",image)

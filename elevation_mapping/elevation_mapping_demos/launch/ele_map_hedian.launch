@@ -7,19 +7,18 @@
   <arg name="robot_name" default="robot_Z"/>
   <!-- <arg name="camera_topic"  default="/camera/color/image_raw"/> -->
   <arg name="camera_topic"  default="/robot_Z/image_rect"/>
-  <!-- <arg name="lidar_topic"  default="/$(arg robot_name)/pointcloud"/> -->
-  <!-- <arg name="lidar_topic"  default="/cloud_registered"/> -->
-   <arg name="lidar_topic"  default="/robot_Z/pointcloud"/>
-   <!-- <arg name="lidar_topic"  default="/rslidar_points"/> -->
-  
+  <arg name="lidar_topic" default="/robot_Z/pointcloud" />
+  <arg name="fake_image_pub" default="true" />
+
+  <!-- publish the ground truth poses from CSV -->
+  <node if="$(arg fake_image_pub)" name="rover_msgs" pkg="rover_msgs" type="sim1.py" />
+
   <node pkg="elevation_mapping" type="elevation_mapping" name="elevation_mapping_$(arg robot_id)" output="screen">
     <rosparam command="load" file="$(find elevation_mapping_demos)/config/robots/hedian_robot.yaml" />
     <rosparam command="load" file="$(find elevation_mapping_demos)/config/elevation_maps/fxz_lio.yaml" />
     <rosparam command="load" file="$(find elevation_mapping)/config/sensor_processors/velodyne_VLP16.yaml" />
     <remap from="/voxel_grid/output" to="$(arg lidar_topic)"/>
-    <remap from="/stereo_grey/left/image_raw" to="$(arg camera_topic)"/>
-  
-
+    <remap from="/stereo_grey/left/image_raw" to="$(arg camera_topic)" />
   </node>
 
    <!-- Launch RViz with the demo configuration -->
@@ -32,22 +31,4 @@
   <node pkg="tf2_ros" type="static_transform_publisher" name="body_to_os_sensor"  args="0 0 0 0 0 0  body robot_3/os_sensor "/>
   <node pkg="tf2_ros" type="static_transform_publisher" name="robot_to_body"  args="0 0 0 0 0 0  body robot_3/odom "/>
   <node pkg="tf2_ros" type="static_transform_publisher" name="body_to_bpearl"  args="0.5 0 -0.3 0 1.585 0 body /rslidar "/> -->
-
-<!-- /rslidar + tf bag-->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_camera_init"  args="0 0 0.8 0 0 0  map odom "/> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="body_to_os_sensor"  args="0 0 0 0 0 0  body robot_3/os_sensor "/>
-  <node pkg="tf2_ros" type="static_transform_publisher" name="robot_to_body"  args="0 0 0 0 0 0  body robot_3/odom "/> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="body_to_bpearl"  args="0.4230 0.0244 0.3727 0.4984 1.5348 0.4317 base_footprint /rslidar "/> -->
-
-<!-- 0329 fast lio -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_odom_init"  args="0 0 0 0 0 0  map odom_init  "/>  -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="odom_init_to_camera_init"  args="0 0 0.6 0 0 0  odom_init camera_init "/>  -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="body_to_odom"  args="0 0 0 0 0 0  body robot_3/odom "/> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="body_to_os_sensor"  args="0 0 0 0 0 0  body robot_3/os_sensor "/> -->
-
-
-  <!-- old dog sim -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_odom_init"  args="0 0 0 0 0 0  map odom_init  "/>  -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="body_to_os_sensor"  args="0 0 0 0 0 0  body robot_3/os_sensor "/> -->
-
 </launch>
