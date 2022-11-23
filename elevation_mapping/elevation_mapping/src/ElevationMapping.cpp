@@ -67,7 +67,7 @@ ElevationMapping::ElevationMapping(ros::NodeHandle& nodeHandle, string robot_nam
       sync(MySyncPolicy(10), vel_sub, cameraR_sub)
 {
   ROS_INFO("Elevation mapping node started.");
-  
+
   // hash initialization
   localMap_.rehash(10000);
   prevMap_.setBasicLayers({"elevation"});
@@ -160,7 +160,7 @@ bool ElevationMapping::readParameters()
   double timeTolerance;
   nodeHandle_.param("time_tolerance", timeTolerance, 0.0);
   timeTolerance_.fromSec(timeTolerance);
-  
+
   // ElevationMap parameters. TODO Move this to the elevation map class.
 
   nodeHandle_.param("map_frame_id", mapFrameId, string("/map"));
@@ -197,7 +197,7 @@ bool ElevationMapping::readParameters()
 
   // GPU initialization
   Init_GPU_elevationmap(length_, resolution_, map_.mahalanobisDistanceThreshold_, obstacle_threshold);
- 
+
   // SensorProcessor parameters.
   string sensorType;
   nodeHandle_.param("sensor_processor/type", sensorType, string("structured_light"));
@@ -229,10 +229,10 @@ bool ElevationMapping::initialize()
 
   Duration(1.0).sleep(); // Need this to get the TF caches fill up.
   resetMapUpdateTimer();
-  
+
   octoTree = new octomap::ColorOcTree(octoRoadResolution_);
-  roadOctoTree = new octomap::ColorOcTree(octoRoadResolution_);  
-  obsOctoTree = new octomap::ColorOcTree(octoObsResolution_);  
+  roadOctoTree = new octomap::ColorOcTree(octoRoadResolution_);
+  obsOctoTree = new octomap::ColorOcTree(octoObsResolution_);
   denseSubmap = false;
   preMapAvail = false;
   newLocalMapFlag = 1;
@@ -242,7 +242,7 @@ bool ElevationMapping::initialize()
   initFlag = 1;
   optFlag = 0;
   ROS_INFO("Done.");
-  
+
   return true;
 }
 
@@ -250,36 +250,40 @@ bool ElevationMapping::initialize()
 /*
  * Process raw point cloud
  */
-void ElevationMapping::processpoints(pcl::PointCloud<Anypoint>::ConstPtr pointCloud)
-{ 
-  ros::Time begin_time = ros::Time::now ();
+void ElevationMapping::processpoints(
+    pcl::PointCloud<Anypoint>::ConstPtr pointCloud) {
+    ros::Time begin_time = ros::Time::now();
 
-  // point cloud attributes
-  int point_num = pointCloud->size();
-  int point_index[point_num];
-  float point_height[point_num];
-  float point_var[point_num];
-  
-  int point_colorR[point_num];
-  int point_colorG[point_num];
-  int point_colorB[point_num];
-  float point_intensity[point_num];
+    // point cloud attributes
+    int point_num = pointCloud->size();
+    int point_index[point_num];
+    float point_height[point_num];
+    float point_var[point_num];
 
-  PointCloud<Anypoint>::Ptr pointProcessed(new PointCloud<Anypoint>);
+    int point_colorR[point_num];
+    int point_colorG[point_num];
+    int point_colorB[point_num];
+    float point_intensity[point_num];
 
-  if (!this->sensorProcessor_->process(pointCloud, pointProcessed, point_colorR, point_colorG, point_colorB, point_index, point_intensity, point_height, point_var)) {
-    ROS_ERROR("Point cloud could not be processed.");
-    this->resetMapUpdateTimer();
-  }
+    PointCloud<Anypoint>::Ptr pointProcessed(new PointCloud<Anypoint>);
 
-  boost::recursive_mutex::scoped_lock lock(MapMutex_);
+    if (!this->sensorProcessor_->process(
+            pointCloud, pointProcessed, point_colorR, point_colorG,
+            point_colorB, point_index, point_intensity, point_height,
+            point_var)) {
+        ROS_ERROR("Point cloud could not be processed.");
+        this->resetMapUpdateTimer();
+        return;
+    }
 
-  // GPU functions for fusing multi-frame point cloud
-  Fuse(length_, point_num, point_index, point_colorR, point_colorG, point_colorB, point_intensity, point_height, point_var);
-  
-  lock.unlock();
+    boost::recursive_mutex::scoped_lock lock(MapMutex_);
+
+    // GPU functions for fusing multi-frame point cloud
+    Fuse(length_, point_num, point_index, point_colorR, point_colorG,
+         point_colorB, point_intensity, point_height, point_var);
+
+    lock.unlock();
 }
-
 
 /*
  * Process map cells
@@ -294,7 +298,7 @@ void ElevationMapping::processmapcells()
     this->resetMapUpdateTimer();
     return;
   }
-  lock.unlock();   
+  lock.unlock();
 }
 
 
@@ -346,36 +350,35 @@ void ElevationMapping::Callback(const sensor_msgs::PointCloud2ConstPtr& rawPoint
   // Project image to point cloud
   for(int i = 0; i < pointCloud->points.size(); i++)
   {
-    P_lidar << pointCloud->points[i].x, 
-              pointCloud->points[i].y,
-              pointCloud->points[i].z,
-              1;
-    P_img = P_lidar2img * P_lidar;
-    
-    P_x = P_img.x() / P_img.z();  // NCLT need to flip x, y
-    P_y = P_img.y() / P_img.z();
+      P_lidar << pointCloud->points[i].x, pointCloud->points[i].y,
+          pointCloud->points[i].z, 1;
+      P_img = P_lidar2img * P_lidar;
 
-    cv::Point midPoint;
+      P_x = P_img.x() / P_img.z(); // NCLT need to flip x, y
+      P_y = P_img.y() / P_img.z();
 
-    midPoint.x = P_x;
-    midPoint.y = P_y;
+      cv::Point midPoint;
 
-    // Project image to lidar point cloud
-    if(midPoint.x > 0 && midPoint.x < img.size().width && midPoint.y > 0 && midPoint.y < img.size().height && P_img.z() > 0){ // NCLT need to flip height, width  
-      int b = img.at<cv::Vec3b>(midPoint.y,midPoint.x)[0];
-      int g = img.at<cv::Vec3b>(midPoint.y,midPoint.x)[1];
-      int r = img.at<cv::Vec3b>(midPoint.y,midPoint.x)[2];
-      cv::circle(img, midPoint, 1, cv::Scalar(b, g, r));
-      pointCloud->points[i].b = b;
-      pointCloud->points[i].g = g;
-      pointCloud->points[i].r = r;
-    }
-    else{
-      pointCloud->points[i].b = 0;
-      pointCloud->points[i].g = 0;
-      pointCloud->points[i].r = 0;
-      pointCloud->points[i].intensity = 0;
-    }
+      midPoint.x = P_x;
+      midPoint.y = P_y;
+
+      // Project image to lidar point cloud
+      if (midPoint.x > 0 && midPoint.x < img.size().width && midPoint.y > 0 &&
+          midPoint.y < img.size().height &&
+          P_img.z() > 0) { // NCLT need to flip height, width
+          int b = img.at<cv::Vec3b>(midPoint.y, midPoint.x)[0];
+          int g = img.at<cv::Vec3b>(midPoint.y, midPoint.x)[1];
+          int r = img.at<cv::Vec3b>(midPoint.y, midPoint.x)[2];
+          cv::circle(img, midPoint, 1, cv::Scalar(b, g, r));
+          pointCloud->points[i].b = b;
+          pointCloud->points[i].g = g;
+          pointCloud->points[i].r = r;
+      } else {
+          pointCloud->points[i].b = 0;
+          pointCloud->points[i].g = 0;
+          pointCloud->points[i].r = 0;
+          pointCloud->points[i].intensity = 0;
+      }
   }
 
   lastPointCloudUpdateTime_.fromNSec(1000 * pointCloud->header.stamp);
@@ -389,9 +392,9 @@ void ElevationMapping::Callback(const sensor_msgs::PointCloud2ConstPtr& rawPoint
   std::thread processPointThread(&ElevationMapping::processpoints, this, pointCloud);
   std::thread processMapCellThread(&ElevationMapping::processmapcells, this);
   processPointThread.join();
-  processMapCellThread.join();  
+  processMapCellThread.join();
 
-  // point cloud attributes 
+  // point cloud attributes
   float elevation[length_ * length_];
   int point_colorR[length_ * length_];
   int point_colorG[length_ * length_];
@@ -401,7 +404,7 @@ void ElevationMapping::Callback(const sensor_msgs::PointCloud2ConstPtr& rawPoint
   float traver[length_ * length_];
   float var[length_ * length_];
   float intensity[length_ * length_];
-  
+
   preMapAvail = false;
 
   // calculate point cloud attributes
@@ -414,7 +417,7 @@ void ElevationMapping::Callback(const sensor_msgs::PointCloud2ConstPtr& rawPoint
   updateLocalMap(rawPointCloud);
   visualPointMap();
   // visualOctomap();
-  
+
   // raytracing for obstacle removal
   Raytracing(length_);
   prevMap_ = map_.visualMap_;
@@ -473,297 +476,329 @@ void ElevationMapping::savingSubMap()
   }
 }
 
-
 /*
- * Map composing 
+ * Map composing
  */
-void ElevationMapping::composingGlobalMap()
-{
-  // ROS_INFO("composingGlobalMap");
-  if(globalMap_.size() >= 1 && preMapAvail){
-    pointCloud cloudpt;
-    pointCloud::Ptr grid_pc;
+void ElevationMapping::composingGlobalMap() {
+    // ROS_INFO("composingGlobalMap");
+    if (globalMap_.size() >= 1 && preMapAvail) {
+        pointCloud cloudpt;
+        pointCloud::Ptr grid_pc;
 
-    gridMaptoPointCloud(prevMap_, grid_pc);
+        gridMaptoPointCloud(prevMap_, grid_pc);
 
-    for(int i = 0; i < globalMap_.size(); i++){
-      cloudpt += globalMap_[i];
+        for (int i = 0; i < globalMap_.size(); i++) {
+            cloudpt += globalMap_[i];
+        }
+
+        sensor_msgs::PointCloud2 output;
+        pcl::toROSMsg(cloudpt, output);
+        output.header.frame_id = mapFrameId;
+        globalMapPublisher_.publish(output);
+
+        octomap_msgs::Octomap road_octomsg, obs_octomsg;
+
+        pointCloudtoOctomap(*grid_pc, *roadOctoTree, *obsOctoTree);
+
+        octomap_msgs::fullMapToMsg(*roadOctoTree, road_octomsg);
+        road_octomsg.header.frame_id = mapFrameId;
+        road_octomsg.resolution = roadOctoTree->getResolution();
+        roadOctomapPublisher_.publish(road_octomsg);
+
+        octomap_msgs::fullMapToMsg(*obsOctoTree, obs_octomsg);
+        obs_octomsg.header.frame_id = mapFrameId;
+        obs_octomsg.resolution = obsOctoTree->getResolution();
+        obsOctomapPublisher_.publish(obs_octomsg);
     }
-
-    sensor_msgs::PointCloud2 output;
-    pcl::toROSMsg(cloudpt, output);
-    output.header.frame_id = mapFrameId;
-    globalMapPublisher_.publish(output);
-
-    octomap_msgs::Octomap road_octomsg, obs_octomsg;
-
-    pointCloudtoOctomap(*grid_pc, *roadOctoTree, *obsOctoTree);
-    
-    octomap_msgs::fullMapToMsg(*roadOctoTree, road_octomsg);
-    road_octomsg.header.frame_id = mapFrameId;
-    road_octomsg.resolution = roadOctoTree->getResolution();  
-    roadOctomapPublisher_.publish(road_octomsg); 
-
-    octomap_msgs::fullMapToMsg(*obsOctoTree, obs_octomsg);
-    obs_octomsg.header.frame_id = mapFrameId;
-    obs_octomsg.resolution = obsOctoTree->getResolution();  
-    obsOctomapPublisher_.publish(obs_octomsg); 
-  }
 }
-
 
 /*
  * Publish global map for visualization
  */
-void ElevationMapping::visualPointMap()
-{
-  if(!optFlag){
-    pointCloud::Ptr grid_pc;
-    gridMaptoPointCloud(map_.visualMap_, grid_pc);
-    sensor_msgs::PointCloud2 output;
-    pcl::toROSMsg(visualCloud_+*grid_pc, output);
-    output.header.frame_id = mapFrameId;
-    pointMapPublisher_.publish(output);
-  }
-
+void ElevationMapping::visualPointMap() {
+    if (!optFlag) {
+        pointCloud::Ptr grid_pc;
+        gridMaptoPointCloud(map_.visualMap_, grid_pc);
+        sensor_msgs::PointCloud2 output;
+        pcl::toROSMsg(visualCloud_ + *grid_pc, output);
+        output.header.frame_id = mapFrameId;
+        pointMapPublisher_.publish(output);
+    }
 }
-
 
 /*
  * Publish global map in octotree for visualization
  */
-void ElevationMapping::visualOctomap()
-{
-  octomap_msgs::Octomap octomsg;
-  if(visualCloud_.size() > 0){
-    // pointCloudtoOctomap(visualCloud_, *octoTree);
+void ElevationMapping::visualOctomap() {
+    octomap_msgs::Octomap octomsg;
+    if (visualCloud_.size() > 0) {
+        // pointCloudtoOctomap(visualCloud_, *octoTree);
 
-    octomap_msgs::fullMapToMsg(*octoTree, octomsg);
-    octomsg.header.frame_id = mapFrameId;
-    octomsg.resolution = octoTree->getResolution();  
-    octomapPublisher_.publish(octomsg);
-  }
+        octomap_msgs::fullMapToMsg(*octoTree, octomsg);
+        octomsg.header.frame_id = mapFrameId;
+        octomsg.resolution = octoTree->getResolution();
+        octomapPublisher_.publish(octomsg);
+    }
 }
-
 
 /*
  * Map saving callback
  */
-void ElevationMapping::mapSavingSignal(const std_msgs::Bool::ConstPtr& savingSignal)
-{
-  if(savingSignal->data == 1)
-    savingMap();
+void ElevationMapping::mapSavingSignal(
+    const std_msgs::Bool::ConstPtr &savingSignal) {
+    if (savingSignal->data == 1)
+        savingMap();
     // savingSubMap();
-  ROS_WARN("Saving Global Map at: %s.", mapSavingDir.c_str());
+    ROS_WARN("Saving Global Map at: %s.", mapSavingDir.c_str());
 }
-
 
 /*
  * Dense submap build signal callback
  */
-void ElevationMapping::denseMappingSignal(const std_msgs::Bool::ConstPtr& denseSignal)
-{
-  if(denseSignal->data == 1)
-    denseSubmap = true;
-  ROS_WARN("Starting dense submap build.");
+void ElevationMapping::denseMappingSignal(
+    const std_msgs::Bool::ConstPtr &denseSignal) {
+    if (denseSignal->data == 1)
+        denseSubmap = true;
+    ROS_WARN("Starting dense submap build.");
 }
-
 
 /*
  * Loop closing signal callback
  */
-void ElevationMapping::optKeyframeCallback(const slam_msg::Keyframes::ConstPtr& optKeyFrame)
-{
-  optFlag = 1;
-  JumpOdomFlag = 1;
-  optGlobalMapLoc_.clear();
+void ElevationMapping::optKeyframeCallback(
+    const slam_msg::Keyframes::ConstPtr &optKeyFrame) {
+    optFlag = 1;
+    JumpOdomFlag = 1;
+    optGlobalMapLoc_.clear();
 
-  // Save the opt transform matrix
-  for(int i = 0; i < optKeyFrame->keyframes.size(); i++){
-    int optId = optKeyFrame->keyframes[i].id;
-    Eigen::Quaternionf q(optKeyFrame->keyframes[i].rotation[3], optKeyFrame->keyframes[i].rotation[0], optKeyFrame->keyframes[i].rotation[1], optKeyFrame->keyframes[i].rotation[2]);
-    Eigen::Isometry3f T(q);
-    T.pretranslate(Eigen::Vector3f(optKeyFrame->keyframes[i].position[0], optKeyFrame->keyframes[i].position[1], optKeyFrame->keyframes[i].position[2]));
-    optGlobalMapLoc_.push_back(T);
-  }
-  optKeyframeNum = optGlobalMapLoc_.size();
-  ROS_WARN("Start optimizing global map with submap num %d", optKeyframeNum);
+    // Save the opt transform matrix
+    for (int i = 0; i < optKeyFrame->keyframes.size(); i++) {
+        int optId = optKeyFrame->keyframes[i].id;
+        Eigen::Quaternionf q(optKeyFrame->keyframes[i].rotation[3],
+                             optKeyFrame->keyframes[i].rotation[0],
+                             optKeyFrame->keyframes[i].rotation[1],
+                             optKeyFrame->keyframes[i].rotation[2]);
+        Eigen::Isometry3f T(q);
+        T.pretranslate(Eigen::Vector3f(optKeyFrame->keyframes[i].position[0],
+                                       optKeyFrame->keyframes[i].position[1],
+                                       optKeyFrame->keyframes[i].position[2]));
+        optGlobalMapLoc_.push_back(T);
+    }
+    optKeyframeNum = optGlobalMapLoc_.size();
+    ROS_WARN("Start optimizing global map with submap num %d", optKeyframeNum);
 }
-
 
 /*
  * New keyframe signal callback
  */
-void ElevationMapping::newKeyframeSignal(const nav_msgs::Odometry::ConstPtr& newKeyframeSignal)
-{
-  newLocalMapFlag = 1;
-  ROS_WARN("NEW KEYFRAME! x = %lf, y = %lf", newKeyframeSignal->twist.twist.linear.x, newKeyframeSignal->twist.twist.linear.y);
+void ElevationMapping::newKeyframeSignal(
+    const nav_msgs::Odometry::ConstPtr &newKeyframeSignal) {
+    newLocalMapFlag = 1;
+    ROS_WARN("NEW KEYFRAME! x = %lf, y = %lf",
+             newKeyframeSignal->twist.twist.linear.x,
+             newKeyframeSignal->twist.twist.linear.y);
 }
-
 
 /*
  * Update local map and if the local map is full add it to global stack
  */
-void ElevationMapping::updateLocalMap(const sensor_msgs::PointCloud2ConstPtr& rawPointCloud)
-{
-  int index, index_x, index_y;
-  float delta_x, delta_y;
+void ElevationMapping::updateLocalMap(
+    const sensor_msgs::PointCloud2ConstPtr &rawPointCloud) {
+    int index, index_x, index_y;
+    float delta_x, delta_y;
 
-  float current_x = current_position[0];
-  float current_y = current_position[1];
+    float current_x = current_position[0];
+    float current_y = current_position[1];
 
-  delta_x = position_shift[0];
-  delta_y = position_shift[1];
+    delta_x = position_shift[0];
+    delta_y = position_shift[1];
 
-   if(initFlag == 1)
-     prevMap_ = map_.visualMap_;
+    if (initFlag == 1)
+        prevMap_ = map_.visualMap_;
 
-  // Should adapt to the SLAM. Check if a new local map is needed
-  if(initFlag == 0 && sqrt(pow((trackPoseTransformed_.getOrigin().x() - trajectory_.back().translation().x()),2) + pow((trackPoseTransformed_.getOrigin().y() - trajectory_.back().translation().y()),2)) >= localMapSize_){
-    newLocalMapFlag = 1;
-    keyFramePCPublisher_.publish(rawPointCloud);
-  }
-
-  // main if for generate local map
-  if(newLocalMapFlag == 1 && (JumpFlag == 1 || optFlag == 0)){// && JumpOdomFlag == 0){ // At the local_map's boundary
-    if(!localMap_.empty() && initFlag == 0){ // Not the init state
-
-      // Get keyframe pose
-      Eigen::Quaternionf q(trackPoseTransformed_.getRotation().w(), trackPoseTransformed_.getRotation().x(), trackPoseTransformed_.getRotation().y(), trackPoseTransformed_.getRotation().z());
-      Eigen::Isometry3f prev_center(q);
-      prev_center.pretranslate(Eigen::Vector3f(trackPoseTransformed_.getOrigin().x(), trackPoseTransformed_.getOrigin().y(), trackPoseTransformed_.getOrigin().z()));
-      trajectory_.push_back(prev_center);
-
-      // Save the center of every keyframe
-      PointXY localMapCenter_;
-      localMapCenter_.x = trajectory_.back().translation().x();
-      localMapCenter_.y = trajectory_.back().translation().y();
-      localMapLoc_.push_back(localMapCenter_);
-
-      // Debug only
-      ROS_WARN("newLocalMapFlag %d, Push new keyframe! x = %lf, y = %lf", newLocalMapFlag, trajectory_.back().translation().x(), trajectory_.back().translation().y());
-      
-      // Save local hash to point cloud
-      pointCloud::Ptr out_pc, grid_pc;
-      pcl::PointCloud<pcl::PointXYZRGB>::Ptr dense_output;
-
-      // Save local map into global map stack
-      gridMaptoPointCloud(map_.visualMap_, grid_pc);
-      localHashtoPointCloud(localMap_, out_pc);
-
-      if(denseSubmap)
-        pointcloudinterpolation(out_pc);
-
-      denseSubmap = false;
-      unique_lock<mutex> lock(GlobalMapMutex_);
-      globalMap_.push_back(*out_pc + *grid_pc);
-      lock.unlock();
-
-      // Publish submap
-      dislam_msgs::SubMap output;
-      sensor_msgs::PointCloud2 pc;
-      pcl::toROSMsg(*out_pc, pc);
-      pc.header.frame_id = mapFrameId;
-      pc.header.stamp = ros::Time(0);
-      output.submap = pc;
-      output.orthoImage = *orthoImage;
-      output.keyframePC = *rawPointCloud;
-      output.pose.position.x = trackPoseTransformed_.getOrigin().x();
-      output.pose.position.y = trackPoseTransformed_.getOrigin().y();
-      output.pose.position.z = trackPoseTransformed_.getOrigin().z();
-      output.pose.orientation.x = trackPoseTransformed_.getRotation().x();
-      output.pose.orientation.y = trackPoseTransformed_.getRotation().y();
-      output.pose.orientation.z = trackPoseTransformed_.getRotation().z();
-      output.pose.orientation.w = trackPoseTransformed_.getRotation().w();
-
-      subMapPublisher_.publish(output);
-
-      // Quick clear unordered_map
-      umap tmp;
-      localMap_.swap(tmp);
-      newLocalMapFlag = 0;
-
-    }else if(initFlag == 1){  // Init process
-      Eigen::Isometry3f prev_center = Eigen::Isometry3f::Identity();  // Initial map center
-      prev_center.pretranslate(Eigen::Vector3f(0.0, 0.0, 0.0));
-      trajectory_.push_back(prev_center);
-
-      PointXY localMapCenter_;
-      localMapCenter_.x = trajectory_.back().translation().x();
-      localMapCenter_.y = trajectory_.back().translation().y();
-      localMapLoc_.push_back(localMapCenter_);
-      umap tmp;
-      localMap_.swap(tmp);
-      
-      optFlag = 0;
-      initFlag = 0;
-      JumpOdomFlag = 0;
-      JumpFlag = 0;
-      
-      newLocalMapFlag = 0;
-      ROS_INFO("Map Stack Initialized.");
-      return;
+    // Should adapt to the SLAM. Check if a new local map is needed
+    if (initFlag == 0 && sqrt(pow((trackPoseTransformed_.getOrigin().x() -
+                                   trajectory_.back().translation().x()),
+                                  2) +
+                              pow((trackPoseTransformed_.getOrigin().y() -
+                                   trajectory_.back().translation().y()),
+                                  2)) >= localMapSize_) {
+        newLocalMapFlag = 1;
+        keyFramePCPublisher_.publish(rawPointCloud);
     }
-    
-  }
 
-  ROS_INFO("Move_x: %lf, Move_y: %lf ",delta_x, delta_y);
-  int count = 0;
+    // main if for generate local map
+    if (newLocalMapFlag == 1 &&
+        (JumpFlag == 1 ||
+         optFlag ==
+             0)) {                                 // && JumpOdomFlag == 0){ // At the local_map's boundary
+        if (!localMap_.empty() && initFlag == 0) { // Not the init state
 
-  // Local mapping
-  if(abs(delta_x) >= resolution_ || abs(delta_y) >= resolution_ && initFlag == 0 && JumpFlag == 0){// && (JumpOdomFlag == 0 || newLocalMapFlag == 0)){
-    for (GridMapIterator iterator(prevMap_); !iterator.isPastEnd(); ++iterator) {   // Add L shape infomation of the previous grid map into the local map
+            // Get keyframe pose
+            Eigen::Quaternionf q(trackPoseTransformed_.getRotation().w(),
+                                 trackPoseTransformed_.getRotation().x(),
+                                 trackPoseTransformed_.getRotation().y(),
+                                 trackPoseTransformed_.getRotation().z());
+            Eigen::Isometry3f prev_center(q);
+            prev_center.pretranslate(
+                Eigen::Vector3f(trackPoseTransformed_.getOrigin().x(),
+                                trackPoseTransformed_.getOrigin().y(),
+                                trackPoseTransformed_.getOrigin().z()));
+            trajectory_.push_back(prev_center);
 
-      grid_map::Position position;
-      prevMap_.getPosition(*iterator, position);
-      index_x = (*iterator).transpose().x();
-      index_y = (*iterator).transpose().y();
-      index = index_x * length_ + index_y;
+            // Save the center of every keyframe
+            PointXY localMapCenter_;
+            localMapCenter_.x = trajectory_.back().translation().x();
+            localMapCenter_.y = trajectory_.back().translation().y();
+            localMapLoc_.push_back(localMapCenter_);
 
-      if(prevMap_.at("elevation", *iterator) != -10 && prevMap_.at("traver", *iterator) >= 0.0){
-       if(((position.x() < (current_x - length_ * resolution_ / 2) || position.y() < (current_y - length_ * resolution_ / 2 )) && (delta_x > 0  && delta_y > 0))
-           || ((position.x() > (current_x + length_ * resolution_ / 2 ) || position.y() > (current_y + length_ * resolution_ / 2 )) && (delta_x < 0 && delta_y < 0))
-           || ((position.x() < (current_x - length_ * resolution_ / 2 ) || position.y() > (current_y + length_ * resolution_ / 2 )) && (delta_x > 0 && delta_y < 0))
-           || ((position.x() > (current_x + length_ * resolution_ / 2 ) || position.y() < (current_y - length_ * resolution_ / 2 )) && (delta_x < 0 && delta_y > 0))
-           || ((position.x() < (current_x - length_ * resolution_ / 2 )) && (delta_x > 0 && delta_y == 0))
-           || ((position.x() > (current_x + length_ * resolution_ / 2 )) && (delta_x < 0 && delta_y == 0))
-           || ((position.y() < (current_y - length_ * resolution_ / 2 )) && (delta_y > 0 && delta_x == 0))
-           || ((position.y() > (current_y + length_ * resolution_ / 2 )) && (delta_y < 0 && delta_x == 0))){ 
-            
-            GridPoint save_pos(position.x(), position.y());
-            GridPointData save_data(prevMap_.at("elevation", *iterator), prevMap_.at("variance", *iterator), prevMap_.at("color_r", *iterator), 
-                                    prevMap_.at("color_g", *iterator), prevMap_.at("color_b", *iterator), prevMap_.at("intensity", *iterator), prevMap_.at("traver", *iterator));
-            
-            // Update the grid information within local map
-            auto got = localMap_.find(save_pos);
-            if(got == localMap_.end()){
-              localMap_.insert(make_pair(save_pos, save_data));
-            }else{
-              localMap_.erase(got);
-              localMap_.insert(make_pair(save_pos, save_data));
-              count++;
-            }
+            // Debug only
+            ROS_WARN("newLocalMapFlag %d, Push new keyframe! x = %lf, y = %lf",
+                     newLocalMapFlag, trajectory_.back().translation().x(),
+                     trajectory_.back().translation().y());
 
-            // Add information to real-time visualization
-            Anypoint pt;
-            pt.x = position.x();
-            pt.y = position.y();
-            pt.z = prevMap_.at("elevation", *iterator);
-            pt.r = prevMap_.at("color_r", *iterator);
-            pt.g = prevMap_.at("color_g", *iterator);
-            pt.b = prevMap_.at("color_b", *iterator);
-            pt.travers = prevMap_.at("traver", *iterator);
-            pt.intensity = prevMap_.at("intensity", *iterator);
-            pt.covariance = prevMap_.at("variance", *iterator);
-            visualCloud_.push_back(pt);
+            // Save local hash to point cloud
+            pointCloud::Ptr out_pc, grid_pc;
+            pcl::PointCloud<pcl::PointXYZRGB>::Ptr dense_output;
+
+            // Save local map into global map stack
+            gridMaptoPointCloud(map_.visualMap_, grid_pc);
+            localHashtoPointCloud(localMap_, out_pc);
+
+            if (denseSubmap)
+                pointcloudinterpolation(out_pc);
+
+            denseSubmap = false;
+            unique_lock<mutex> lock(GlobalMapMutex_);
+            globalMap_.push_back(*out_pc + *grid_pc);
+            lock.unlock();
+
+            // Publish submap
+            dislam_msgs::SubMap output;
+            sensor_msgs::PointCloud2 pc;
+            pcl::toROSMsg(*out_pc, pc);
+            pc.header.frame_id = mapFrameId;
+            pc.header.stamp = ros::Time(0);
+            output.submap = pc;
+            output.orthoImage = *orthoImage;
+            output.keyframePC = *rawPointCloud;
+            output.pose.position.x = trackPoseTransformed_.getOrigin().x();
+            output.pose.position.y = trackPoseTransformed_.getOrigin().y();
+            output.pose.position.z = trackPoseTransformed_.getOrigin().z();
+            output.pose.orientation.x = trackPoseTransformed_.getRotation().x();
+            output.pose.orientation.y = trackPoseTransformed_.getRotation().y();
+            output.pose.orientation.z = trackPoseTransformed_.getRotation().z();
+            output.pose.orientation.w = trackPoseTransformed_.getRotation().w();
+
+            subMapPublisher_.publish(output);
+
+            // Quick clear unordered_map
+            umap tmp;
+            localMap_.swap(tmp);
+            newLocalMapFlag = 0;
+
+        } else if (initFlag == 1) { // Init process
+            Eigen::Isometry3f prev_center =
+                Eigen::Isometry3f::Identity(); // Initial map center
+            prev_center.pretranslate(Eigen::Vector3f(0.0, 0.0, 0.0));
+            trajectory_.push_back(prev_center);
+
+            PointXY localMapCenter_;
+            localMapCenter_.x = trajectory_.back().translation().x();
+            localMapCenter_.y = trajectory_.back().translation().y();
+            localMapLoc_.push_back(localMapCenter_);
+            umap tmp;
+            localMap_.swap(tmp);
+
+            optFlag = 0;
+            initFlag = 0;
+            JumpOdomFlag = 0;
+            JumpFlag = 0;
+
+            newLocalMapFlag = 0;
+            ROS_INFO("Map Stack Initialized.");
+            return;
         }
-      }
     }
-    // ROS_WARN("eliminating same position point %d", count);
-  }
-  JumpFlag = 0;
-}
 
+    ROS_INFO("Move_x: %lf, Move_y: %lf ", delta_x, delta_y);
+    int count = 0;
+
+    // Local mapping
+    if (abs(delta_x) >= resolution_ ||
+        abs(delta_y) >= resolution_ && initFlag == 0 &&
+            JumpFlag == 0) { // && (JumpOdomFlag == 0 || newLocalMapFlag == 0)){
+        for (GridMapIterator iterator(prevMap_); !iterator.isPastEnd();
+             ++iterator) { // Add L shape infomation of the previous grid map
+                           // into the local map
+
+            grid_map::Position position;
+            prevMap_.getPosition(*iterator, position);
+            index_x = (*iterator).transpose().x();
+            index_y = (*iterator).transpose().y();
+            index = index_x * length_ + index_y;
+
+            if (prevMap_.at("elevation", *iterator) != -10 &&
+                prevMap_.at("traver", *iterator) >= 0.0) {
+                if (((position.x() < (current_x - length_ * resolution_ / 2) ||
+                      position.y() < (current_y - length_ * resolution_ / 2)) &&
+                     (delta_x > 0 && delta_y > 0)) ||
+                    ((position.x() > (current_x + length_ * resolution_ / 2) ||
+                      position.y() > (current_y + length_ * resolution_ / 2)) &&
+                     (delta_x < 0 && delta_y < 0)) ||
+                    ((position.x() < (current_x - length_ * resolution_ / 2) ||
+                      position.y() > (current_y + length_ * resolution_ / 2)) &&
+                     (delta_x > 0 && delta_y < 0)) ||
+                    ((position.x() > (current_x + length_ * resolution_ / 2) ||
+                      position.y() < (current_y - length_ * resolution_ / 2)) &&
+                     (delta_x < 0 && delta_y > 0)) ||
+                    ((position.x() < (current_x - length_ * resolution_ / 2)) &&
+                     (delta_x > 0 && delta_y == 0)) ||
+                    ((position.x() > (current_x + length_ * resolution_ / 2)) &&
+                     (delta_x < 0 && delta_y == 0)) ||
+                    ((position.y() < (current_y - length_ * resolution_ / 2)) &&
+                     (delta_y > 0 && delta_x == 0)) ||
+                    ((position.y() > (current_y + length_ * resolution_ / 2)) &&
+                     (delta_y < 0 && delta_x == 0))) {
+
+                    GridPoint save_pos(position.x(), position.y());
+                    GridPointData save_data(prevMap_.at("elevation", *iterator),
+                                            prevMap_.at("variance", *iterator),
+                                            prevMap_.at("color_r", *iterator),
+                                            prevMap_.at("color_g", *iterator),
+                                            prevMap_.at("color_b", *iterator),
+                                            prevMap_.at("intensity", *iterator),
+                                            prevMap_.at("traver", *iterator));
+
+                    // Update the grid information within local map
+                    auto got = localMap_.find(save_pos);
+                    if (got == localMap_.end()) {
+                        localMap_.insert(make_pair(save_pos, save_data));
+                    } else {
+                        localMap_.erase(got);
+                        localMap_.insert(make_pair(save_pos, save_data));
+                        count++;
+                    }
+
+                    // Add information to real-time visualization
+                    Anypoint pt;
+                    pt.x = position.x();
+                    pt.y = position.y();
+                    pt.z = prevMap_.at("elevation", *iterator);
+                    pt.r = prevMap_.at("color_r", *iterator);
+                    pt.g = prevMap_.at("color_g", *iterator);
+                    pt.b = prevMap_.at("color_b", *iterator);
+                    pt.travers = prevMap_.at("traver", *iterator);
+                    pt.intensity = prevMap_.at("intensity", *iterator);
+                    pt.covariance = prevMap_.at("variance", *iterator);
+                    visualCloud_.push_back(pt);
+                }
+            }
+        }
+        // ROS_WARN("eliminating same position point %d", count);
+    }
+    JumpFlag = 0;
+}
 
 /*
  * Update global map and if the loop is detected
@@ -795,10 +830,11 @@ void ElevationMapping::updateGlobalMap()
 
           cout << "transformMatrix ***************" << endl << trajectory_[i].matrix() << endl;
           cout << "optGlobalMapLoc_ ***************" << endl << optGlobalMapLoc_[i].matrix() << endl;
-        
-          pcl::transformPointCloud(globalMap_[i], cloudUpdated, transformMatrix);              
-          
-          unique_lock<mutex> lock(GlobalMapMutex_);  
+
+          pcl::transformPointCloud(globalMap_[i], cloudUpdated,
+                                   transformMatrix);
+
+          unique_lock<mutex> lock(GlobalMapMutex_);
           globalMap_[i] = cloudUpdated;
 
           lock.unlock();
@@ -840,46 +876,58 @@ void ElevationMapping::updateGlobalMap()
         umap out_new, out_old;
 
         if(pointIdx[index].size() > 2){
-          
-          for(auto j = 1; j < pointIdx[index].size(); j++){  
-            // Convert pointcloud to hash for fusing
-            out_new.clear();
-            out_old.clear();
-            pointCloudtoHash(globalMap_[pointIdx[index][j]], out_new);
-            pointCloudtoHash(globalMap_[i], out_old);
 
-            for(umap::iterator iter = out_new.begin(); iter != out_new.end();){
-              // Find Point with Near Position
-              GridPoint tmp(iter->first.x, iter->first.y);
-              GridPointData tmp_data(iter->second.elevation, iter->second.var, iter->second.r, iter->second.g, iter->second.b, iter->second.intensity, iter->second.travers);
-              umap::const_iterator got = out_old.find(tmp);
+            for (auto j = 1; j < pointIdx[index].size(); j++) {
+                // Convert pointcloud to hash for fusing
+                out_new.clear();
+                out_old.clear();
+                pointCloudtoHash(globalMap_[pointIdx[index][j]], out_new);
+                pointCloudtoHash(globalMap_[i], out_old);
 
-              if(got != out_old.end() && got->second.var > 0 && got->second.var < 1){
-                // Update Point Elevation and Variance
-                count++;
-                tmp_data.elevation = pow(iter->second.var, 2) * got->second.elevation + pow(got->second.var, 2) * iter->second.elevation / pow(got->second.var, 2) + pow(iter->second.var, 2);
-                tmp_data.var = pow(got->second.var, 2) * pow(iter->second.var, 2) / pow(got->second.var, 2) + pow(iter->second.var, 2);
+                for (umap::iterator iter = out_new.begin();
+                     iter != out_new.end();) {
+                    // Find Point with Near Position
+                    GridPoint tmp(iter->first.x, iter->first.y);
+                    GridPointData tmp_data(
+                        iter->second.elevation, iter->second.var,
+                        iter->second.r, iter->second.g, iter->second.b,
+                        iter->second.intensity, iter->second.travers);
+                    umap::const_iterator got = out_old.find(tmp);
 
-                // Delete the same point in two hash, and add fused point to both.
-                out_old.erase(tmp);
-                iter = out_new.erase(iter);
-                out_new.insert(make_pair(tmp, tmp_data));
-                out_old.insert(make_pair(tmp, tmp_data));
-              }
-              else{
-                iter++;
-              }
+                    if (got != out_old.end() && got->second.var > 0 &&
+                        got->second.var < 1) {
+                        // Update Point Elevation and Variance
+                        count++;
+                        tmp_data.elevation =
+                            pow(iter->second.var, 2) * got->second.elevation +
+                            pow(got->second.var, 2) * iter->second.elevation /
+                                pow(got->second.var, 2) +
+                            pow(iter->second.var, 2);
+                        tmp_data.var = pow(got->second.var, 2) *
+                                           pow(iter->second.var, 2) /
+                                           pow(got->second.var, 2) +
+                                       pow(iter->second.var, 2);
+
+                        // Delete the same point in two hash, and add fused
+                        // point to both.
+                        out_old.erase(tmp);
+                        iter = out_new.erase(iter);
+                        out_new.insert(make_pair(tmp, tmp_data));
+                        out_old.insert(make_pair(tmp, tmp_data));
+                    } else {
+                        iter++;
+                    }
+                }
+
+                // Put the optimized local map into the visual stack
+                unique_lock<mutex> lock(GlobalMapMutex_);
+                pointCloud::Ptr tmp, tmp_now;
+                localHashtoPointCloud(out_new, tmp);
+                globalMap_[pointIdx[index][j]] = *tmp;
+                localHashtoPointCloud(out_old, tmp_now);
+                globalMap_[i] = *tmp_now;
+                lock.unlock();
             }
-
-            // Put the optimized local map into the visual stack
-            unique_lock<mutex> lock(GlobalMapMutex_);
-            pointCloud::Ptr tmp, tmp_now;
-            localHashtoPointCloud(out_new, tmp); 
-            globalMap_[pointIdx[index][j]] = *tmp;
-            localHashtoPointCloud(out_old, tmp_now); 
-            globalMap_[i] = *tmp_now;
-            lock.unlock();
-          }
 
           index++;
         }
@@ -911,7 +959,7 @@ bool ElevationMapping::updatePrediction(const ros::Time& time)
   if (ignoreRobotMotionUpdates_) return true;
 
   ROS_DEBUG("Updating map with latest prediction from time %f.", robotPoseCache_.getLatestTime().toSec());
- 
+
   if (time + timeTolerance_ < map_.getTimeOfLastUpdate()) {
    // map_.ElevationMap::getRawGridMap().setTimestamp(0);
   }
@@ -933,7 +981,8 @@ bool ElevationMapping::updatePrediction(const ros::Time& time)
   Tf_robotpose.orientation.y = sensorProcessor_->M2StransformTf.getRotation().getY();
   Tf_robotpose.orientation.z = sensorProcessor_->M2StransformTf.getRotation().getZ();
   Tf_robotpose.orientation.w = sensorProcessor_->M2StransformTf.getRotation().getW();
-	// std::cout << "Tf_robotpose " << Tf_robotpose.position.x << "  "<< Tf_robotpose.position.y << std::endl; 
+  // std::cout << "Tf_robotpose " << Tf_robotpose.position.x << "  "<<
+  // Tf_robotpose.position.y << std::endl;
   convertFromRosGeometryMsg(Tf_robotpose, robotPose);
 
   if(Tf_robotpose.position.x == 0 && Tf_robotpose.position.y == 0)
@@ -941,10 +990,10 @@ bool ElevationMapping::updatePrediction(const ros::Time& time)
   // Covariance is stored in row-major in ROS: http://docs.ros.org/api/geometry_msgs/html/msg/PoseWithCovariance.html
   Eigen::Matrix<double, 6, 6> robotPoseCovariance;
   robotPoseCovariance.setZero();
-                        
+
   // Compute map variance update from motio n prediction.
   robotMotionMapUpdater_.update(map_, robotPose, robotPoseCovariance, time);
-   
+
   return true;
 }
 
@@ -1004,37 +1053,40 @@ bool ElevationMapping::updateMapLocation()
   current_p[2] = trackPointTransformed_z;
   grid_map::Index M_startindex;
   grid_map::Position M_position;
-  
+
   // handle odom jump phenomenone when optimization is done
-  if(JumpOdomFlag == 1){    
+  if (JumpOdomFlag == 1) {
 
-    float opt_position[2];
-    float opt_alignedPosition[2];
-    float height_update = trackPointTransformed_z - later_trackPointTransformed_z;
+      float opt_position[2];
+      float opt_alignedPosition[2];
+      float height_update =
+          trackPointTransformed_z - later_trackPointTransformed_z;
 
-    opt_position[0] = trackPointTransformed_x;
-    opt_position[1] = trackPointTransformed_y;
+      opt_position[0] = trackPointTransformed_x;
+      opt_position[1] = trackPointTransformed_y;
 
-    Map_optmove(opt_position, height_update, resolution_,  length_, opt_alignedPosition);
+      Map_optmove(opt_position, height_update, resolution_, length_,
+                  opt_alignedPosition);
 
-    M_position.x() = opt_alignedPosition[0];
-    M_position.y() = opt_alignedPosition[1];
-    // map_.opt_move(M_position, height_update);
-    prevMap_ = map_.visualMap_;
+      M_position.x() = opt_alignedPosition[0];
+      M_position.y() = opt_alignedPosition[1];
+      // map_.opt_move(M_position, height_update);
+      prevMap_ = map_.visualMap_;
 
-  }else{
+  } else {
 
-    int d_startindex[2];
+      int d_startindex[2];
 
-    // move the grid map to this location
-    Move(current_p , resolution_,  length_, current_position, d_startindex, position_shift);
+      // move the grid map to this location
+      Move(current_p, resolution_, length_, current_position, d_startindex,
+           position_shift);
 
-    M_startindex.x() = d_startindex[0];
-    M_startindex.y() = d_startindex[1];
-    M_position.x() = current_position[0];
-    M_position.y() = current_position[1];
+      M_startindex.x() = d_startindex[0];
+      M_startindex.y() = d_startindex[1];
+      M_position.x() = current_position[0];
+      M_position.y() = current_position[1];
 
-    map_.move(M_startindex, M_position);
+      map_.move(M_startindex, M_position);
   }
 
   later_trackPointTransformed_z = trackPointTransformed_z;
@@ -1071,7 +1123,7 @@ void pointcloudinterpolation(pointCloud::Ptr &input)
 {
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputcloudPtr(new pcl::PointCloud<pcl::PointXYZRGB>());
   pcl::PointCloud<pcl::PointXYZRGB> inputcloud;
-  
+
   for(auto it = input->begin(); it != input->end(); it++){
     pcl::PointXYZRGB pt;
     pt.x = it->x;
@@ -1095,17 +1147,18 @@ void pointcloudinterpolation(pointCloud::Ptr &input)
   double gauss_param = (double)std::pow(search_radius,2);
   int pol_order = 5;
 
-	mls.setComputeNormals(true); 
-	mls.setInputCloud(inputcloudPtr);
-	mls.setPolynomialFit(true);
-	mls.setSearchMethod(tree);
+  mls.setComputeNormals(true);
+  mls.setInputCloud(inputcloudPtr);
+  mls.setPolynomialFit(true);
+  mls.setSearchMethod(tree);
   mls.setSearchRadius(search_radius);
   mls.setUpsamplingMethod(pcl::MovingLeastSquares<pcl::PointXYZRGB, pcl::PointXYZRGB>::RANDOM_UNIFORM_DENSITY);
   mls.setUpsamplingRadius(sampling_radius);
   mls.setUpsamplingStepSize(step_size);
   mls.setPolynomialOrder(pol_order);
   mls.setSqrGaussParam(gauss_param);// (the square of the search radius works best in general)
-  //mls.setDilationVoxelSize();//Used only in the VOXEL_GRID_DILATION upsampling method 
+  // mls.setDilationVoxelSize();//Used only in the VOXEL_GRID_DILATION
+  // upsampling method
   mls.setPointDensity(1000); //15
 	mls.process(*dense_points);
 
@@ -1148,14 +1201,14 @@ void ElevationMapping::pointCloudtoOctomap(pointCloud localPointCloud, octomap::
 
   // Create the filtering object
   pcl::StatisticalOutlierRemoval<Anypoint> sor;
-  sor.setInputCloud(filteredPointcloud);  
-  sor.setMeanK(20);  
-  sor.setStddevMulThresh(1.0); 
+  sor.setInputCloud(filteredPointcloud);
+  sor.setMeanK(20);
+  sor.setStddevMulThresh(1.0);
   sor.filter(localPointCloud);
 
   roadTree.clear();
   obsTree.clear();
-  
+
   for(auto p:localPointCloud.points) {
     // insert point into tree
     if(p.travers > traversThre){
