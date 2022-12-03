@@ -57,7 +57,8 @@ ElevationMap::ElevationMap(ros::NodeHandle nodeHandle, string robot_name)
   visualMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>(robot_name + "/visual_map", 1);
   elevationMapRawPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>(robot_name + "/elevation_map_raw", 1);
   VpointsPublisher_ = nodeHandle_.advertise<sensor_msgs::PointCloud2>(robot_name + "/visualpoints",1);
-  orthomosaicPublisher_ = nodeHandle_.advertise<sensor_msgs::Image>(robot_name + "/orthomosaic", 1); // twilight image 221123
+  orthomosaicPublisher_ = nodeHandle_.advertise<sensor_msgs::Image>(robot_name + "/orthomosaic", 1);
+  traverImgPublisher_ = nodeHandle_.advertise<sensor_msgs::Image>("/robot_centric_image", 1); // traver image 221123 twilight
   initialTime_ = ros::Time::now();
 }
 
@@ -87,8 +88,8 @@ ElevationMap::show(ros::Time timeStamp, string robot_name,
                    int *point_colorG, int *point_colorB, float *rough,
                    float *slope, float *traver, float *intensity) {
     cv::Mat image(length, length, CV_8UC3, cv::Scalar(0, 0, 0));
-    // twilight image 221123
-    // cv::Mat image(length, length, CV_64FC1, cv::Scalar(0, 0, 0)); // 64F 每个元素是双精度浮点数 C1 1通道
+    // traver image 221123 twilight
+    cv::Mat traverImage(length, length, CV_32FC3, cv::Scalar(0.0f, 0.0f));
 
     visualMap_.clearAll();
 
@@ -140,33 +141,72 @@ ElevationMap::show(ros::Time timeStamp, string robot_name,
             image.at<cv::Vec3b>((index_x + length - start_index[0]) % length, (index_y + length - start_index[1]) % length)[0] = visualMap_.at("color_b", *iterator);
             image.at<cv::Vec3b>((index_x + length - start_index[0]) % length, (index_y + length - start_index[1]) % length)[1] = visualMap_.at("color_g", *iterator);
             image.at<cv::Vec3b>((index_x + length - start_index[0]) % length, (index_y + length - start_index[1]) % length)[2] = visualMap_.at("color_r", *iterator);
-            // twilight image 221123
-            // image.at<double>((index_x + length - start_index[0]) % length, (index_y + length - start_index[1]) % length) = visualMap_.at("traver", *iterator);
+            // traver image 221123 twilight
+            traverImage.at<cv::Vec3f>((index_x + length - start_index[0]) % length, (index_y + length - start_index[1]) % length)[0] = visualMap_.at("elevation", *iterator);
+            traverImage.at<cv::Vec3f>((index_x + length - start_index[0]) % length, (index_y + length - start_index[1]) % length)[1] = visualMap_.at("traver", *iterator);
+            traverImage.at<cv::Vec3f>((index_x + length - start_index[0]) % length, (index_y + length - start_index[1]) % length)[2] = -10.0f;
+            // temp = visualMap_.at("traver", *iterator);
+            // cout << "temp: " << temp << endl;
+            // temp = visualMap_.at("elevation", *iterator);
+            // cout << "type:" << typeid(visualMap_.at("elevation", *iterator)).name() << endl;
+            // cout << "+++++traver:" << double(visualMap_.at(" traver ", *iterator)) << endl;
+
+            // std::cout << "Size = " << visualMap_.getSize()(0) << "," << visualMap_.getSize()(1) << "\n"
+            //           << std::endl;
         }
     }
 
-  // Publish orthomoasic image
-  sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
-  orthomosaicPublisher_.publish(msg);
+    // grid_map::Size size = visualMap_.getSize();
+    // grid_map::Index submapStartIndex(0, 0);
+    // grid_map::Index submapBufferSize(size(0), size(1));
 
-  // // twilight image 221123
-  // //  Publish orthomoasic image
-  // sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
-  // orthomosaicPublisher_.publish(msg);
+    // cout << "raw map : " << endl;
+    // for (grid_map::SubmapIterator iterator(visualMap_, submapStartIndex, submapBufferSize); !iterator.isPastEnd(); ++iterator) {
+    //     const grid_map::Index index(*iterator);
+    //     printf("%-3.3f\t ", visualMap_.at("traver", *iterator));
+    //     if (index(1) == size(1) - 1)
+    //         cout << endl;
+    // }
+    // // cout << "traverImage.cols :" << traverImage.cols << ","
+    // //      << "traverImage.rows: " << traverImage.rows << endl;
+    // cout << endl
+    //      << "image :" << endl;
+    // cout << "elevation : " << endl;
+    // for (int i = 0; i < traverImage.cols; i++) {
+    //     for (int j = 0; j < traverImage.rows; j++) {
+    //         printf("%-3.3f\t ", traverImage.at<cv::Vec3f>(i, j)[0]);
+    //     }
+    //     cout << endl;
+    // }
+    // cout << "traver : " << endl;
+    // for (int i = 0; i < traverImage.cols; i++) {
+    //     for (int j = 0; j < traverImage.rows; j++) {
+    //         printf("%-3.3f\t ", traverImage.at<cv::Vec3f>(i, j)[1]);
+    //     }
+    //     cout << endl;
+    // }
+    // Publish orthomoasic image
+    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
+    orthomosaicPublisher_.publish(msg);
 
-  pcl_conversions::toPCL(timeStamp, show_pointCloud.header.stamp);
+    // Publish traver image 221123 twilight
+    sensor_msgs::ImagePtr traverImgMsg = cv_bridge::CvImage(std_msgs::Header(), sensor_msgs::image_encodings::TYPE_32FC3, traverImage).toImageMsg();
+    traverImgMsg->header.stamp = timeStamp;
+    traverImgPublisher_.publish(traverImgMsg);
 
-  show_pointCloud.header.frame_id = frame_id;
+    pcl_conversions::toPCL(timeStamp, show_pointCloud.header.stamp);
 
-  if (show_pointCloud.size() > 0) {
-      sensor_msgs::PointCloud2 pub_pointcloud;
-      pcl::toROSMsg(show_pointCloud, pub_pointcloud);
-      VpointsPublisher_.publish(pub_pointcloud);
-      VpointsPublisher_.publish(pub_pointcloud);
-      VpointsPublisher_.publish(pub_pointcloud);
-      VpointsPublisher_.publish(pub_pointcloud);
-      VpointsPublisher_.publish(pub_pointcloud);
-  }
+    show_pointCloud.header.frame_id = frame_id;
+
+    if (show_pointCloud.size() > 0) {
+        sensor_msgs::PointCloud2 pub_pointcloud;
+        pcl::toROSMsg(show_pointCloud, pub_pointcloud);
+        VpointsPublisher_.publish(pub_pointcloud);
+        VpointsPublisher_.publish(pub_pointcloud);
+        VpointsPublisher_.publish(pub_pointcloud);
+        VpointsPublisher_.publish(pub_pointcloud);
+        VpointsPublisher_.publish(pub_pointcloud);
+    }
 
   grid_map_msgs::GridMap message;
   GridMapRosConverter::toMessage(visualMap_, message);

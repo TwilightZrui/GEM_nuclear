@@ -31,7 +31,7 @@
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_camera_init" args="0 0 1 0 0 0  map camera_init " />
   <node pkg="tf2_ros" type="static_transform_publisher" name="body_to_os_sensor" args="0 0 0 0 0 0  body /robot_3/os_sensor" /> -->
   <!-- /rslidar -->
-  <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_camera_init" args="0 0 1 0 0 0  map camera_init " />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_camera_init" args="0 0 1.2 0 0 0  map camera_init " />
   <node pkg="tf2_ros" type="static_transform_publisher" name="body_to_os_sensor" args="0.72152 0.0002615 -0.061949  0.0 -0.9735  3.1416  /body_real /rslidar" />
 
 </launch>

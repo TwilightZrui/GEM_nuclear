@@ -46,13 +46,13 @@ int main(int argc, char** argv)
   elevation_mapping::ElevationMapping elevationMap(nodeHandle, robot_name);
 
   boost::thread MapPublisherThread(&elevation_mapping::ElevationMapping::Run, &elevationMap);
-  boost::thread MapComposingThread(&elevation_mapping::ElevationMapping::composingGlobalMapThread, &elevationMap);
-  boost::thread LoopCloseThread(&elevation_mapping::ElevationMapping::updateGlobalMap, &elevationMap);
+  // boost::thread MapComposingThread(&elevation_mapping::ElevationMapping::composingGlobalMapThread, &elevationMap);
+  // boost::thread LoopCloseThread(&elevation_mapping::ElevationMapping::updateGlobalMap, &elevationMap);
 
   ros::MultiThreadedSpinner spinner(4);
   elevationMap.startsync();
-  
+
   spinner.spin();
-  
+
   return 0;
 }
