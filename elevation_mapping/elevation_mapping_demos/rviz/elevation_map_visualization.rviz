@@ -4,6 +4,8 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Global Options1
+        - /Status1
         - /TF1/Frames1
         - /TF1/Tree1
         - /PointCloud2/history_point1
@@ -28,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2/Decay
+    SyncSource: ""
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -59,13 +61,29 @@ Visualization Manager:
       Frame Timeout: 5
       Frames:
         All Enabled: false
-        BASE:
+        LF_FOOT:
+          Value: true
+        LF_SHANK:
+          Value: true
+        LH_FOOT:
+          Value: true
+        LH_SHANK:
+          Value: true
+        RF_FOOT:
+          Value: true
+        RF_SHANK:
+          Value: true
+        RH_FOOT:
+          Value: true
+        RH_SHANK:
+          Value: true
+        base:
+          Value: true
+        camera_init:
+          Value: true
+        imu_link:
           Value: true
         map:
-          Value: true
-        odom_init:
-          Value: true
-        velodyne2:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -73,11 +91,7 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          odom_init:
-            BASE:
-              velodyne2:
-                {}
+        {}
       Update Interval: 0
       Value: true
     - Angle Tolerance: 0.10000000149011612
@@ -441,7 +455,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: odom_init
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
