@@ -480,36 +480,36 @@ void ElevationMapping::savingSubMap()
  * Map composing
  */
 void ElevationMapping::composingGlobalMap() {
-    // ROS_INFO("composingGlobalMap");
-    if (globalMap_.size() >= 1 && preMapAvail) {
-        pointCloud cloudpt;
-        pointCloud::Ptr grid_pc;
+  ROS_INFO("composingGlobalMap");
+  if (globalMap_.size() >= 1 && preMapAvail) {
+    pointCloud cloudpt;
+    pointCloud::Ptr grid_pc;
 
-        gridMaptoPointCloud(prevMap_, grid_pc);
+    gridMaptoPointCloud(prevMap_, grid_pc);
 
-        for (int i = 0; i < globalMap_.size(); i++) {
-            cloudpt += globalMap_[i];
-        }
-
-        sensor_msgs::PointCloud2 output;
-        pcl::toROSMsg(cloudpt, output);
-        output.header.frame_id = mapFrameId;
-        globalMapPublisher_.publish(output);
-
-        octomap_msgs::Octomap road_octomsg, obs_octomsg;
-
-        pointCloudtoOctomap(*grid_pc, *roadOctoTree, *obsOctoTree);
-
-        octomap_msgs::fullMapToMsg(*roadOctoTree, road_octomsg);
-        road_octomsg.header.frame_id = mapFrameId;
-        road_octomsg.resolution = roadOctoTree->getResolution();
-        roadOctomapPublisher_.publish(road_octomsg);
-
-        octomap_msgs::fullMapToMsg(*obsOctoTree, obs_octomsg);
-        obs_octomsg.header.frame_id = mapFrameId;
-        obs_octomsg.resolution = obsOctoTree->getResolution();
-        obsOctomapPublisher_.publish(obs_octomsg);
+    for (int i = 0; i < globalMap_.size(); i++) {
+          cloudpt += globalMap_[i];
     }
+
+    sensor_msgs::PointCloud2 output;
+    pcl::toROSMsg(cloudpt, output);
+    output.header.frame_id = mapFrameId;
+    globalMapPublisher_.publish(output);
+
+    octomap_msgs::Octomap road_octomsg, obs_octomsg;
+
+    pointCloudtoOctomap(*grid_pc, *roadOctoTree, *obsOctoTree);
+
+    octomap_msgs::fullMapToMsg(*roadOctoTree, road_octomsg);
+    road_octomsg.header.frame_id = mapFrameId;
+    road_octomsg.resolution = roadOctoTree->getResolution();
+    roadOctomapPublisher_.publish(road_octomsg);
+
+    octomap_msgs::fullMapToMsg(*obsOctoTree, obs_octomsg);
+    obs_octomsg.header.frame_id = mapFrameId;
+    obs_octomsg.resolution = obsOctoTree->getResolution();
+    obsOctomapPublisher_.publish(obs_octomsg);
+  }
 }
 
 /*
