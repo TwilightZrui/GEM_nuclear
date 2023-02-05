@@ -385,11 +385,11 @@ __global__ void G_pointsprocess(int* map_index, float *point_x, float *point_y, 
         // 	flag = 1;
         // }
 
-        if ((point_x[i] > -1 && point_x[i] < 0) &&
-            (point_y[i] > -8 && point_y[i] < 8) &&
-            (point_z[i] > 0 && point_z[i] < 0.5)) {
-            flag = 1;
-        }
+        // if ((point_x[i] > -1 && point_x[i] < 0) &&
+        //     (point_y[i] > -8 && point_y[i] < 8) &&
+        //     (point_z[i] > 0 && point_z[i] < 0.5)) {
+        //     flag = 1;
+        // }
 
         if ((point_height > C_relativeLowerThreshold &&
              point_height < C_relativeUpperThreshold && point_height < 1.5) &&

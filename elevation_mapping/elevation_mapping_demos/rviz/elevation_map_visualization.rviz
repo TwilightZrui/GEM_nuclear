@@ -6,8 +6,8 @@ Panels:
       Expanded:
         - /TF1/Frames1
         - /TF1/Tree1
-        - /OccupancyMap1
-        - /OccupancyMap1/Status1
+        - /PointCloud2/Decay1
+        - /Point/bpearl1
       Splitter Ratio: 0.5618892312049866
     Tree Height: 1559
   - Class: rviz/Selection
@@ -28,7 +28,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: Point/bpearl
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -59,13 +59,23 @@ Visualization Manager:
       Frame Timeout: 5
       Frames:
         All Enabled: false
-        body:
+        base_footprint:
           Value: true
-        body_real:
+        body:
           Value: true
         camera_init:
           Value: true
+        ecef:
+          Value: true
         map:
+          Value: true
+        odom:
+          Value: true
+        os_imu:
+          Value: true
+        os_sensor:
+          Value: true
+        reference_frame:
           Value: true
         rslidar:
           Value: true
@@ -75,13 +85,16 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          camera_init:
-            body:
-              {}
-            body_real:
-              rslidar:
-                {}
+        ecef:
+          map:
+            reference_frame:
+              odom:
+                base_footprint:
+                  os_imu:
+                    {}
+                  os_sensor:
+                    rslidar:
+                      {}
       Update Interval: 0
       Value: true
     - Angle Tolerance: 0.10000000149011612
@@ -124,7 +137,7 @@ Visualization Manager:
       Color: 200; 200; 200
       Color Layer: traver
       Color Transformer: GridMapLayer
-      Enabled: false
+      Enabled: true
       Height Layer: elevation
       Height Transformer: GridMapLayer
       History Length: 1
@@ -138,7 +151,7 @@ Visualization Manager:
       Topic: /robot_Z/visual_map
       Unreliable: false
       Use Rainbow: true
-      Value: false
+      Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: false
       Class: grid_map_rviz_plugin/GridMap
@@ -404,16 +417,16 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 5.380276203155518
-        Min Value: -19.642986297607422
+        Max Value: 7.449896335601807
+        Min Value: -2.0191869735717773
         Value: true
       Axis: Z
       Channel Name: rgba
       Class: rviz/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: FlatColor
-      Decay Time: 12345
-      Enabled: false
+      Color Transformer: AxisColor
+      Decay Time: 1000
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Min Color: 0; 0; 0
@@ -422,13 +435,13 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.0020000000949949026
+      Size (m): 0.0010000000474974513
       Style: Flat Squares
       Topic: /robot_Z/pointcloud
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
     - Class: rviz/Image
       Enabled: true
       Image Topic: /robot_Z/traver_image
@@ -451,24 +464,24 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: ""
+      Color Transformer: Intensity
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Min Color: 0; 0; 0
       Name: Point/ouster
-      Position Transformer: ""
+      Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.009999999776482582
       Style: Flat Squares
-      Topic: ""
+      Topic: /rslidar_points
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -481,7 +494,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: Intensity
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Min Color: 0; 0; 0
@@ -490,13 +503,13 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.009999999776482582
+      Size (m): 0.004999999888241291
       Style: Flat Squares
       Topic: /rslidar_points
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -527,9 +540,9 @@ Visualization Manager:
       Value: false
     - Class: octomap_rviz_plugin/ColorOccupancyGrid
       Enabled: true
-      Max. Height Display: inf
+      Max. Height Display: 3.4028234663852886e+38
       Max. Octree Depth: 16
-      Min. Height Display: -inf
+      Min. Height Display: -3.4028234663852886e+38
       Name: ColorOccupancyGrid
       Octomap Topic: /robot_Z/road_octomap
       Queue Size: 5
@@ -539,9 +552,9 @@ Visualization Manager:
       Voxel Rendering: Occupied Voxels
     - Class: octomap_rviz_plugin/OccupancyGrid
       Enabled: true
-      Max. Height Display: inf
+      Max. Height Display: 3.4028234663852886e+38
       Max. Octree Depth: 16
-      Min. Height Display: -inf
+      Min. Height Display: -3.4028234663852886e+38
       Name: OccupancyGrid
       Octomap Topic: ""
       Queue Size: 5
@@ -564,7 +577,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: map
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -588,25 +601,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 15.527077674865723
+      Distance: 8.412505149841309
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 3.5702152252197266
-        Y: -1.4679906368255615
-        Z: -0.8784555196762085
+        X: 4.1702775955200195
+        Y: 0.8892021179199219
+        Z: -0.8784526586532593
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.8097968697547913
+      Pitch: 1.4997963905334473
       Target Frame: odom
       Value: XYOrbit (rviz)
-      Yaw: 3.22023868560791
+      Yaw: 0.5288857221603394
     Saved: ~
 Window Geometry:
   Displays:

@@ -1,7 +1,7 @@
 from rosbag import Bag
 import sys
 
-with Bag('/home/twilight/dataset/221024_map_Lio_deepRobotics/LIO_data2/close_indoor_2_bpearl_time_sync.bag', 'w') as Y, Bag('/home/twilight/dataset/221024_map_Lio_deepRobotics/LIO_data2/close_indoor_2_bpearl.bag', 'r') as X:
+with Bag('/home/twilight/Downloads/2023-01-13-15-30-11_sync.bag', 'w') as Y, Bag('/home/twilight/Downloads/2023-01-13-15-30-11.bag', 'r') as X:
     start_time = X.get_start_time()
     end_time = X.get_end_time()
     time_period = end_time - start_time
@@ -10,9 +10,9 @@ with Bag('/home/twilight/dataset/221024_map_Lio_deepRobotics/LIO_data2/close_ind
         time_for_now = float(t.secs)
         # print(time_for_now)
         # print(start_time)
-        if topic == "/rslidar_points" or topic == "/ouster/points" or topic == "/ouster/imu":
+        if topic == "/rslidar_points" or topic == "/tf":
             # if topic == "/rslidar_points"  or topic == "/velodyne_points" or topic == "/imu_data" :
-            if topic == "/rslidar_points" or topic == "/ouster/points" or topic == "/ouster/imu":
+            if topic == "/rslidar_points":
                 tCam1.secs = t.secs + 2
                 tCam1.nsecs = t.nsecs
                 if tCam1.nsecs <= 0:

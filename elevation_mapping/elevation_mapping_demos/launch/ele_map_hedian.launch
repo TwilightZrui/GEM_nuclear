@@ -2,36 +2,57 @@
 
   <!-- Elevation mapping node -->
   <param name="/use_sim_time" value="true" />
-  <arg name="rviz" default="true "/>
-  <arg name="robot_id" default="1"/>
-  <arg name="robot_name" default="robot_Z"/>
+  <arg name="rviz" default="true " />
+  <arg name="robot_id" default="1" />
+  <arg name="robot_name" default="robot_Z" />
   <!-- <arg name="camera_topic"  default="/camera/color/image_raw"/> -->
-  <arg name="camera_topic"  default="/robot_Z/image_rect"/>
+  <arg name="camera_topic" default="/robot_Z/image_rect" />
   <arg name="lidar_topic" default="/robot_Z/pointcloud" />
   <arg name="fake_image_pub" default="true" />
 
   <!-- publish the ground truth poses from CSV -->
-  <node if="$(arg fake_image_pub)" name="rover_msgs" pkg="rover_msgs" type="sim1.py" />
+  <node if="$(arg fake_image_pub)" name="rover_msgs"
+    pkg="rover_msgs" type="sim1.py" />
 
-  <node pkg="elevation_mapping" type="elevation_mapping" name="elevation_mapping_$(arg robot_id)" output="screen">
+  <node pkg="elevation_mapping" type="elevation_mapping"
+    name="elevation_mapping_$(arg robot_id)" output="screen">
     <rosparam command="load" file="$(find elevation_mapping_demos)/config/robots/hedian_robot.yaml" />
-    <rosparam command="load" file="$(find elevation_mapping_demos)/config/elevation_maps/fxz_lio.yaml" />
-    <rosparam command="load" file="$(find elevation_mapping)/config/sensor_processors/velodyne_VLP16.yaml" />
-    <remap from="/voxel_grid/output" to="$(arg lidar_topic)"/>
+    <rosparam command="load"
+      file="$(find elevation_mapping_demos)/config/elevation_maps/fxz_lio.yaml" />
+    <rosparam command="load"
+      file="$(find elevation_mapping)/config/sensor_processors/velodyne_VLP16.yaml" />
+    <remap from="/voxel_grid/output" to="$(arg lidar_topic)" />
     <remap from="/stereo_grey/left/image_raw" to="$(arg camera_topic)" />
   </node>
 
-   <!-- Launch RViz with the demo configuration -->
-  <group if = "$(arg rviz)" >
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find elevation_mapping_demos)/rviz/elevation_map_visualization.rviz" />
+  <!-- Launch RViz with the demo configuration -->
+  <group
+    if="$(arg rviz)">
+    <node name="rviz" pkg="rviz" type="rviz"
+      args="-d $(find elevation_mapping_demos)/rviz/elevation_map_visualization.rviz" />
   </group>
 
   <!-- X Y Z YAW PITCH ROLL -->
   <!-- 4800 dog 0329 bag -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_camera_init" args="0 0 1 0 0 0  map camera_init " />
-  <node pkg="tf2_ros" type="static_transform_publisher" name="body_to_os_sensor" args="0 0 0 0 0 0  body /robot_3/os_sensor" /> -->
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_camera_init" args="0 0 1 0
+  0 0  map camera_init " />
+  <node pkg="tf2_ros" type="static_transform_publisher"
+  name="body_to_os_sensor" args="0 0 0 0 0 0  body /robot_3/os_sensor" /> -->
+
   <!-- /rslidar -->
-  <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_camera_init" args="0 0 1.2 0 0 0  map camera_init " />
-  <node pkg="tf2_ros" type="static_transform_publisher" name="body_to_os_sensor" args="0.72152 0.0002615 -0.061949  0.0 -0.9735  3.1416  /body_real /rslidar" />
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_camera_init" args="0 0 1.2
+  0 0 0  map camera_init " />
+  <node pkg="tf2_ros" type="static_transform_publisher"
+  name="body_to_os_sensor" args="0.72152 0.0002615 -0.061949  0.0 -0.9735  3.1416  /body_real
+  /rslidar" /> -->
+  <!-- rslidar  new calibration -->
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="bpearl2ouster"
+    args="
+  -0.72472447 0.017807 0.38246 -3.1187  -1.1743  3.1321 /base_footprint /rslidar" /> -->
+
+  <!-- -0.6676  -0.1520 -0.1171  -3.0728  -1.1497    3.0718 -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="bpearl2lidar"
+    args=" -0.6676  -0.1520 -0.1171  -3.0728  -1.1497    3.0718 /os_sensor /rslidar" />
+
 
 </launch>

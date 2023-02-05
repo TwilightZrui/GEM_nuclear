@@ -53,7 +53,7 @@ namespace elevation_mapping {
 
 class ElevationMapping;
 
-ElevationMapping::ElevationMapping(ros::NodeHandle& nodeHandle, string robot_name_)
+ElevationMapping::ElevationMapping(ros::NodeHandle &nodeHandle, string robot_name_)
     : nodeHandle_(nodeHandle),
       map_(nodeHandle, robot_name_),
       gmap_(nodeHandle, robot_name_),
@@ -64,26 +64,25 @@ ElevationMapping::ElevationMapping(ros::NodeHandle& nodeHandle, string robot_nam
       ignoreRobotMotionUpdates_(false),
       vel_sub(nodeHandle, "/voxel_grid/output", 1),
       cameraR_sub(nodeHandle, "/stereo_grey/left/image_raw", 1),
-      sync(MySyncPolicy(10), vel_sub, cameraR_sub)
-{
-  ROS_INFO("Elevation mapping node started.");
+      sync(MySyncPolicy(100), vel_sub, cameraR_sub) {
+    ROS_INFO("Elevation mapping node started.");
 
-  // hash initialization
-  localMap_.rehash(10000);
-  prevMap_.setBasicLayers({"elevation"});
+    // hash initialization
+    localMap_.rehash(10000);
+    prevMap_.setBasicLayers({"elevation"});
 
-  // publishers
-  pointMapPublisher_ = nodeHandle_.advertise<sensor_msgs::PointCloud2>(robotName + "/history_point", 1);
-  subMapPublisher_ = nodeHandle_.advertise<dislam_msgs::SubMap>(robotName + "/submap", 1);
-  globalMapPublisher_ = nodeHandle_.advertise<sensor_msgs::PointCloud2>(robotName + "/global_point", 1);
-  lastmapPublisher_ =  nodeHandle_.advertise<grid_map_msgs::GridMap>(robotName + "/opt_map", 1);
-  keyFramePCPublisher_ = nodeHandle_.advertise<sensor_msgs::PointCloud2>(robotName + "/keyframe_pc", 1);
-  octomapPublisher_ = nodeHandle_.advertise<octomap_msgs::Octomap>(robotName + "/local_octomap", 1);
-  roadOctomapPublisher_ = nodeHandle_.advertise<octomap_msgs::Octomap>(robotName + "/road_octomap", 1);
-  obsOctomapPublisher_ = nodeHandle_.advertise<octomap_msgs::Octomap>(robotName + "/obs_octomap", 1);
+    // publishers
+    pointMapPublisher_ = nodeHandle_.advertise<sensor_msgs::PointCloud2>(robotName + "/history_point", 1);
+    subMapPublisher_ = nodeHandle_.advertise<dislam_msgs::SubMap>(robotName + "/submap", 1);
+    globalMapPublisher_ = nodeHandle_.advertise<sensor_msgs::PointCloud2>(robotName + "/global_point", 1);
+    lastmapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>(robotName + "/opt_map", 1);
+    keyFramePCPublisher_ = nodeHandle_.advertise<sensor_msgs::PointCloud2>(robotName + "/keyframe_pc", 1);
+    octomapPublisher_ = nodeHandle_.advertise<octomap_msgs::Octomap>(robotName + "/local_octomap", 1);
+    roadOctomapPublisher_ = nodeHandle_.advertise<octomap_msgs::Octomap>(robotName + "/road_octomap", 1);
+    obsOctomapPublisher_ = nodeHandle_.advertise<octomap_msgs::Octomap>(robotName + "/obs_octomap", 1);
 
-  readParameters();
-  initialize();
+    readParameters();
+    initialize();
 }
 
 /*

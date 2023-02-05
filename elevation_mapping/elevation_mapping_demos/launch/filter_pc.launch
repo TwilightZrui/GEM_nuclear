@@ -8,7 +8,7 @@
   <!-- <arg name="input_lidar_topic" default="/velodyne_points_32"/> -->
   <!-- bpearl -->
   <arg name="input_lidar_topic" default="/rslidar_points" />
-  <arg name="output_lidar_topic" default="/robot_Z/pointcloud" />
+  <arg name="output_lidar_topic" default="/robot_Z/pointcloud_filtered" />
 
   <node pkg="nodelet" type="nodelet" name="pcl_manager_0g_x" args="manager" output="screen" />
   <!-- Run a VoxelGrid filter to clean NaNs and downsample the data -->
