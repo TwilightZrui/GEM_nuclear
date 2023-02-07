@@ -1,6 +1,10 @@
 map_type: costmap
-global_frame: robot0/map
-robot_base_frame: PandarQT
+# global_frame: robot0/map
+# robot_base_frame: PandarQT
+
+# xb20 onboard
+global_frame: odom
+robot_base_frame: rslidar
 
 transform_tolerance: 1.0
 meter_scoring: true
@@ -14,7 +18,7 @@ plugins:
 
 points_layer:
   enabled: true
-  source_topic: "/robot0/history_point"
+  source_topic: "/robot_Z/history_point"
   travers_thresh: 0.7
 
 inflation_layer:
