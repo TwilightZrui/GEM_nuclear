@@ -1,6 +1,10 @@
 map_type: costmap
-global_frame: robot0/map
-robot_base_frame: PandarQT
+# global_frame: robot0/map
+# robot_base_frame: PandarQT
+
+# xb20 onboard
+global_frame: odom
+robot_base_frame: rslidar
 
 transform_tolerance: 1.0
 meter_scoring: true
@@ -9,19 +13,18 @@ footprint: [[-0.64, -0.40], [-0.64, 0.40], [0.64, 0.40], [0.64, -0.40]]
 footprint_padding: 0.0
 
 plugins:
- - {name: elevation_layer, type: "costmap_2d::ElevationMapLayer"}
-#  - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
+  - { name: elevation_layer, type: "costmap_2d::ElevationMapLayer" }
+  - { name: inflation_layer, type: "costmap_2d::InflationLayer" }
 
 elevation_layer:
-  source_topic: "/robot0/visual_map"
+  source_topic: "/robot_Z/visual_map"
   travers_thresh: 0.7
 
 inflation_layer:
- enabled: true
- inflation_radius: 0.00
- cost_scaling_factor: 0.0
+  enabled: true
+  inflation_radius: 0.00 # 碰撞半径
+  cost_scaling_factor: 0.0
 
 static_layer:
-  enabled: false
+  enabled: false #不希望使用静态的地图，因为不利于局部避障
   trinary_costmap: false
-

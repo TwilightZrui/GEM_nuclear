@@ -166,7 +166,7 @@ class ElevationMap
 
   //! Raw elevation map as grid map.
   grid_map::GridMap rawMap_;
-  
+
   grid_map::GridMap visualMap_;
 
   //! Underlying map, used for ground truth maps, multi-robot mapping etc.
@@ -190,6 +190,7 @@ class ElevationMap
   //! Initial ros time
   ros::Time initialTime_;
   ros::Publisher orthomosaicPublisher_;
+  ros::Publisher traverImgPublisher_;
 
   std::string orthoDir;
   std::string robot_id;

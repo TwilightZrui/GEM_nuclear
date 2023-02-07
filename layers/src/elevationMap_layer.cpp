@@ -58,7 +58,7 @@ void ElevationMapLayer::updateBounds(double robot_x, double robot_y, double robo
         grid_map::Matrix& data = elevation_map_["traver"];
         for (grid_map::GridMapIterator iterator(elevation_map_); !iterator.isPastEnd(); ++iterator)
         {
-        
+
             const grid_map::Index gindex(*iterator);
             bool is_obstacle = (data(gindex(0), gindex(1)) < travers_thresh);
 
