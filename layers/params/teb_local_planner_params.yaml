@@ -1,72 +1,83 @@
 TebLocalPlannerROS:
-  odom_topic: odom
-
   # Trajectory
-
   teb_autosize: True
-  dt_ref: 0.3
+  dt_ref: 0.2574
   dt_hysteresis: 0.1
   max_samples: 500
-  global_plan_overwrite_orientation: True # True时，teb_local_planner 规划局部路径时会覆盖掉全局路径点的方位角。false，teb_local_planner会使用全局路径点的方位角。
-  allow_init_with_backwards_motion: False
-  max_global_plan_lookahead_dist: 3.0
+  global_plan_overwrite_orientation: False
+  allow_init_with_backwards_motion: True
+  max_global_plan_lookahead_dist: 1.5
   global_plan_viapoint_sep: -1
   global_plan_prune_distance: 1
-  exact_arc_length: False
+  exact_arc_length: True
   feasibility_check_no_poses: 5
-  publish_feedback: False
+  publish_feedback: True
 
   # Robot
+  max_vel_x: 0.25
+  max_vel_x_backwards: 0.25
+  max_vel_y: 0.1
+  max_vel_y_backwards: 0.1
+  max_vel_theta: 0.2
+  acc_lim_x: 0.1
+  acc_lim_y: 0.1
+  acc_lim_theta: 0.1
+  min_turning_radius: 0.0 # omni-drive robot (can turn on place!)
+  max_vel_trans: 0.25
 
-  max_vel_x: 0.4
-  max_vel_x_backwards: 0.2
-  max_vel_y: 0.0
-  max_vel_theta: 0.3
-  acc_lim_x: 0.5
-  acc_lim_theta: 0.5
-  min_turning_radius: 0.0 # diff-drive robot (can turn on place!)
+  # max_vel_x: 10
+  # max_vel_x_backwards: 10
+  # max_vel_y: 10
+  # max_vel_y_backwards: 10
+  # max_vel_theta: 10
+  # acc_lim_x: 10
+  # acc_lim_y: 10
+  # acc_lim_theta: 10
+  # min_turning_radius: 0.0 # omni-drive robot (can turn on place!)
+  # max_vel_trans: 10
 
   footprint_model:
-    type: "point"
+    type: "two_circles"
+    front_offset: 0.2
+    front_radius: 0.3
+    rear_offset: 0.3
+    rear_radius: 0.3
 
   # GoalTolerance
-
-  xy_goal_tolerance: 0.2
+  xy_goal_tolerance: 0.1
   yaw_goal_tolerance: 0.1
   free_goal_vel: False
   complete_global_plan: True
 
   # Obstacles
-
   min_obstacle_dist: 0.25 # This value must also include our robot radius, since footprint_model is set to "point".
   inflation_dist: 0.6
   include_costmap_obstacles: True
-  costmap_obstacles_behind_robot_dist: 1.5
+  costmap_obstacles_behind_robot_dist: 1.0
   obstacle_poses_affected: 15
-
-  dynamic_obstacle_inflation_dist: 0.6
-  include_dynamic_obstacles: True
-
   costmap_converter_plugin: ""
   costmap_converter_spin_thread: True
   costmap_converter_rate: 5
+  dynamic_obstacle_inflation_dist: 0.6 #动态障碍物的膨胀范围
+  include_dynamic_obstacles: True #是否将动态障碍物预测为速度模型
 
   # Optimization
-
   no_inner_iterations: 5
   no_outer_iterations: 4
   optimization_activate: True
   optimization_verbose: False
   penalty_epsilon: 0.1
   obstacle_cost_exponent: 4
-  weight_max_vel_x: 2
-  weight_max_vel_theta: 1
-  weight_acc_lim_x: 1
-  weight_acc_lim_theta: 1
-  weight_kinematics_nh: 1000
+  weight_max_vel_x: 40
+  weight_max_vel_y: 0
+  weight_max_vel_theta: 0
+  weight_acc_lim_x: 80
+  weight_acc_lim_y: 80
+  weight_acc_lim_theta: 50
+  weight_kinematics_nh: 1 # WE HAVE A HOLONOMIC ROBOT, JUST ADD A SMALL PENALTY
   weight_kinematics_forward_drive: 1
-  weight_kinematics_turning_radius: 1
-  weight_optimaltime: 1 # must be > 0
+  weight_kinematics_turning_radius: 0
+  weight_optimaltime: 100 # must be > 0
   weight_shortest_path: 0
   weight_obstacle: 100
   weight_inflation: 0.2
@@ -76,13 +87,12 @@ TebLocalPlannerROS:
   weight_adapt_factor: 2
 
   # Homotopy Class Planner
-
-  enable_homotopy_class_planning: True #True，teb会同时搜寻多条路径并选取一条更可行的。
+  enable_homotopy_class_planning: False
   enable_multithreading: True
   max_number_classes: 4
   selection_cost_hysteresis: 1.0
   selection_prefer_initial_plan: 0.9
-  selection_obst_cost_scale: 100.0
+  selection_obst_cost_scale: 1.0
   selection_alternative_time_cost: False
 
   roadmap_graph_no_samples: 15
@@ -96,10 +106,9 @@ TebLocalPlannerROS:
   delete_detours_backwards: True
   max_ratio_detours_duration_best_duration: 3.0
   visualize_hc_graph: False
-  visualize_with_time_as_z_axis_scale: False
+  visualize_with_time_as_z_axis_scale: True
 
   # Recovery
-
   shrink_horizon_backup: True
   shrink_horizon_min_duration: 10
   oscillation_recovery: True

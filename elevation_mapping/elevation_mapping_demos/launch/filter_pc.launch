@@ -4,15 +4,16 @@
   <!-- <arg name="input_lidar_topic" default="/os_cloud_node3/points" /> -->
 
   <!-- jueyingpro gazebo  -->
-  <arg name="input_lidar_topic" default="/velodyne_points_32"/>
+  <!-- <arg name="input_lidar_topic" default="/velodyne_points_32" /> -->
 
   <!-- bpearl onboard -->
-  <!-- <arg name="input_lidar_topic" default="/rslidar_points" /> -->
+  <arg name="input_lidar_topic" default="/rslidar_points" />
   <arg name="output_lidar_topic" default="/robot_Z/pointcloud_filtered" />
 
   <node pkg="nodelet" type="nodelet" name="pcl_manager_0g_x" args="manager" output="screen" />
   <!-- Run a VoxelGrid filter to clean NaNs and downsample the data -->
-  <node pkg="nodelet" type="nodelet" name="voxel_grid_0g_x" args="load pcl/VoxelGrid pcl_manager_0g_x" output="screen">
+  <node pkg="nodelet" type="nodelet" name="voxel_grid_0g_x"
+    args="load pcl/VoxelGrid pcl_manager_0g_x" output="screen">
     <remap from="~input" to="$(arg input_lidar_topic)" />
     <remap from="~output" to="/temp1" />
     <rosparam>
@@ -26,11 +27,12 @@
 
   <node pkg="nodelet" type="nodelet" name="pcl_manager_0g_y" args="manager" output="screen" />
   <!-- Run a VoxelGrid filter to clean NaNs and downsample the data -->
-  <node pkg="nodelet" type="nodelet" name="voxel_grid_0g_y" args="load pcl/VoxelGrid pcl_manager_0g_y" output="screen">
+  <node pkg="nodelet" type="nodelet" name="voxel_grid_0g_y"
+    args="load pcl/VoxelGrid pcl_manager_0g_y" output="screen">
     <remap from="~input" to="/temp1" />
     <remap from="~output" to="/temp2" />
     <rosparam>
-      <!-- green -->
+
       filter_field_name: y
       filter_limit_min: -8
       filter_limit_max: 8
@@ -40,7 +42,8 @@
 
   <node pkg="nodelet" type="nodelet" name="pcl_manager_0g_z" args="manager" output="screen" />
   <!-- Run a VoxelGrid filter to clean NaNs and downsample the data -->
-  <node pkg="nodelet" type="nodelet" name="voxel_grid_0g_z" args="load pcl/VoxelGrid pcl_manager_0g_z" output="screen">
+  <node pkg="nodelet" type="nodelet" name="voxel_grid_0g_z"
+    args="load pcl/VoxelGrid pcl_manager_0g_z" output="screen">
     <remap from="~input" to="/temp2" />
     <remap from="~output" to="$(arg output_lidar_topic)" />
     <rosparam>
@@ -50,5 +53,6 @@
       leaf_size: 0.02
     </rosparam>
   </node>
+
 
 </launch>

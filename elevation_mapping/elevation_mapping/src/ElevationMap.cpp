@@ -16,12 +16,12 @@
 #include <grid_map_msgs/GridMap.h>
 
 // PCL
+#include <pcl/PCLPointCloud2.h>
 #include <pcl/conversions.h>
+#include <pcl/filters/voxel_grid.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <pcl/PCLPointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <pcl/filters/voxel_grid.h>
 
 // Math
 #include <math.h>
@@ -35,7 +35,6 @@
 using namespace std;
 using namespace grid_map;
 
-
 namespace elevation_mapping {
 
 ElevationMap::ElevationMap(ros::NodeHandle nodeHandle, string robot_name)
@@ -44,41 +43,37 @@ ElevationMap::ElevationMap(ros::NodeHandle nodeHandle, string robot_name)
       visualMap_({"elevation", "variance", "rough", "slope", "traver", "color_r", "color_g", "color_b", "intensity"}),
       robot_name_(robot_name),
       hasUnderlyingMap_(false),
-      visibilityCleanupDuration_(0.0)
-{
-  rawMap_.setBasicLayers({"elevation", "variance"});
+      visibilityCleanupDuration_(0.0) {
+    rawMap_.setBasicLayers({"elevation", "variance"});
 
-  visualMap_.setBasicLayers({"elevation"});
+    visualMap_.setBasicLayers({"elevation"});
 
-  nodeHandle_.param("orthomosaic_saving_dir", orthoDir, string("/home/mav-lav/Datasets/zjg_image/"));
+    nodeHandle_.param("orthomosaic_saving_dir", orthoDir, string("/home/mav-lav/Datasets/zjg_image/"));
 
-  clear();
+    clear();
 
-  visualMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>(robot_name + "/visual_map", 1);
-  elevationMapRawPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>(robot_name + "/elevation_map_raw", 1);
-  VpointsPublisher_ = nodeHandle_.advertise<sensor_msgs::PointCloud2>(robot_name + "/visualpoints",1);
-  orthomosaicPublisher_ = nodeHandle_.advertise<sensor_msgs::Image>(robot_name + "/orthomosaic", 1);
-  // traverImgPublisher_ = nodeHandle_.advertise<sensor_msgs::Image>("/robot_centric_image", 1); // traver image 221123 twilight
-  initialTime_ = ros::Time::now();
+    visualMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>(robot_name + "/visual_map", 1);
+    elevationMapRawPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>(robot_name + "/elevation_map_raw", 1);
+    VpointsPublisher_ = nodeHandle_.advertise<sensor_msgs::PointCloud2>(robot_name + "/visualpoints", 1);
+    orthomosaicPublisher_ = nodeHandle_.advertise<sensor_msgs::Image>(robot_name + "/orthomosaic", 1);
+    // traverImgPublisher_ = nodeHandle_.advertise<sensor_msgs::Image>("/robot_centric_image", 1); // traver image 221123 twilight
+    initialTime_ = ros::Time::now();
 }
 
-ElevationMap::~ElevationMap()
-{
+ElevationMap::~ElevationMap() {
 }
 
-std::string ElevationMap::reformatFrameId(std::string robotName)
-{
-  std::string slash = "/";
-  if((robotName.find(slash)) == 0 && !robotName.empty()){
-    robotName = robotName.erase(robotName.find(slash),1);
-  }
-  return robotName;
+std::string ElevationMap::reformatFrameId(std::string robotName) {
+    std::string slash = "/";
+    if ((robotName.find(slash)) == 0 && !robotName.empty()) {
+        robotName = robotName.erase(robotName.find(slash), 1);
+    }
+    return robotName;
 }
 
-void ElevationMap::setGeometry(const grid_map::Length& length, const double& resolution, const grid_map::Position& position)
-{
-  rawMap_.setGeometry(length, resolution, position);
-  visualMap_.setGeometry(length, resolution, position);
+void ElevationMap::setGeometry(const grid_map::Length &length, const double &resolution, const grid_map::Position &position) {
+    rawMap_.setGeometry(length, resolution, position);
+    visualMap_.setGeometry(length, resolution, position);
 }
 
 sensor_msgs::ImagePtr
@@ -109,11 +104,11 @@ ElevationMap::show(ros::Time timeStamp, string robot_name,
         grid_map::Position position;
         visualMap_.getPosition(*iterator, position);
 
-        if (position.x() < 1 && position.x() > -2 && position.y() < 1 &&
-            position.y() > -1) {
-            visualMap_.at("elevation", *iterator) = 0.0;
-            visualMap_.at("traver", *iterator) = 1.0;
-        }
+        // if (position.x() < 1 && position.x() > -2 && position.y() < 1 &&
+        //     position.y() > -1) {
+        //     visualMap_.at("elevation", *iterator) = 0.0;
+        //     visualMap_.at("traver", *iterator) = 1.0;
+        // }
 
         if (elevation[index] != -10 && traver[index] != -10 &&
             !std::isnan(traver[index])) {
@@ -171,10 +166,10 @@ ElevationMap::show(ros::Time timeStamp, string robot_name,
         VpointsPublisher_.publish(pub_pointcloud);
     }
 
-  grid_map_msgs::GridMap message;
-  GridMapRosConverter::toMessage(visualMap_, message);
-  visualMapPublisher_.publish(message);
-  return msg;
+    grid_map_msgs::GridMap message;
+    GridMapRosConverter::toMessage(visualMap_, message);
+    visualMapPublisher_.publish(message);
+    return msg;
 }
 
 bool ElevationMap::clear() {
@@ -200,38 +195,31 @@ void ElevationMap::opt_move(Position M_position, float update_height) {
     }
 }
 
-void ElevationMap::move(const Index M_startindex, Position M_position)
-{
-  visualMap_.setStartIndex(M_startindex);
-  visualMap_.setPosition(M_position);
+void ElevationMap::move(const Index M_startindex, Position M_position) {
+    visualMap_.setStartIndex(M_startindex);
+    visualMap_.setPosition(M_position);
 }
 
-grid_map::GridMap& ElevationMap::getRawGridMap()
-{
-  return rawMap_;
+grid_map::GridMap &ElevationMap::getRawGridMap() {
+    return rawMap_;
 }
 
-ros::Time ElevationMap::getTimeOfLastUpdate()
-{
-  return ros::Time().fromNSec(rawMap_.getTimestamp());
+ros::Time ElevationMap::getTimeOfLastUpdate() {
+    return ros::Time().fromNSec(rawMap_.getTimestamp());
 }
 
-const kindr::HomTransformQuatD& ElevationMap::getPose()
-{
-  return pose_;
+const kindr::HomTransformQuatD &ElevationMap::getPose() {
+    return pose_;
 }
 
-void ElevationMap::setFrameId(const std::string& frameId)
-{
-  frame_id = reformatFrameId(frameId);
-  rawMap_.setFrameId(frameId);
-  visualMap_.setFrameId(frameId);
+void ElevationMap::setFrameId(const std::string &frameId) {
+    frame_id = reformatFrameId(frameId);
+    rawMap_.setFrameId(frameId);
+    visualMap_.setFrameId(frameId);
 }
 
-const std::string& ElevationMap::getFrameId()
-{
-  return rawMap_.getFrameId();
+const std::string &ElevationMap::getFrameId() {
+    return rawMap_.getFrameId();
 }
 
-
-} /* namespace */
+} // namespace elevation_mapping

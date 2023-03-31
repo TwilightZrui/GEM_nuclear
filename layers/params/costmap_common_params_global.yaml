@@ -1,32 +1,27 @@
 map_type: costmap
-# global_frame: robot0/map
-# robot_base_frame: PandarQT
+global_frame: map # xb20 onboard
+robot_base_frame: BASE
 
-# xb20 onboard
-global_frame: odom
-robot_base_frame: rslidar
-
-transform_tolerance: 1.0
+transform_tolerance: 1
 meter_scoring: true
 
-footprint: [[-0.64, -0.40], [-0.64, 0.40], [0.64, 0.40], [0.64, -0.40]]
+footprint: [[-0.65, -0.22], [-0.65, 0.22], [0.45, 0.22], [0.45, -0.22]]
 footprint_padding: 0.0
 
 plugins:
- - {name: points_layer, type: "costmap_2d::PointMapLayer"}
- - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
+  - { name: points_layer, type: "costmap_2d::PointMapLayer" }
+  - { name: inflation_layer, type: "costmap_2d::InflationLayer" }
 
 points_layer:
   enabled: true
   source_topic: "/robot_Z/history_point"
-  travers_thresh: 0.7
+  travers_thresh: -100
 
 inflation_layer:
- enabled: true
- inflation_radius: 0.00
- cost_scaling_factor: 0.0
+  enabled: true
+  inflation_radius: 0.18 #膨胀半径，全局路径离障碍太近时调大，但不能覆盖整个道路
+  cost_scaling_factor: 0.0 #障碍物膨胀比例系数，全局路径呈锯齿状时调大
 
 static_layer:
-  enabled: false
+  enabled: true
   trinary_costmap: false
-

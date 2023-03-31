@@ -55,12 +55,12 @@ void ElevationMapLayer::updateBounds(double robot_x, double robot_y, double robo
     // check if the elevation map is available
     if (elevation_map_available_)
     {
-        grid_map::Matrix& data = elevation_map_["traver"];
+        grid_map::Matrix& data = elevation_map_["elevation"];
         for (grid_map::GridMapIterator iterator(elevation_map_); !iterator.isPastEnd(); ++iterator)
         {
 
             const grid_map::Index gindex(*iterator);
-            bool is_obstacle = (data(gindex(0), gindex(1)) < travers_thresh);
+            bool is_obstacle = (data(gindex(0), gindex(1)) > travers_thresh);
 
             grid_map::Position pos;
             elevation_map_.getPosition(gindex, pos);

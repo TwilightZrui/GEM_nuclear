@@ -30,7 +30,7 @@ void PointMapLayer::onInitialize()
 
 
 // Point cloud callback
-void PointMapLayer::pointMapCB(const sensor_msgs::PointCloud2& msg) 
+void PointMapLayer::pointMapCB(const sensor_msgs::PointCloud2& msg)
 {
     pcl::PCLPointCloud2 pcl_pc;
     pcl_conversions::toPCL(msg, pcl_pc);
@@ -65,7 +65,7 @@ void PointMapLayer::updateBounds(double robot_x, double robot_y, double robot_ya
             ROS_DEBUG("Computing map coords failed");
             continue;
         }
-        
+
         // get index of the costmap using raw point xy
         unsigned int index = getIndex(mx, my);
 
@@ -93,7 +93,7 @@ void PointMapLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, i
       int index = getIndex(i, j);
       if (costmap_[index] == NO_INFORMATION)
         continue;
-      master_grid.setCost(i, j, costmap_[index]); 
+      master_grid.setCost(i, j, costmap_[index]);
       // cout << "set cost i " << i << " j " << j << endl;
    }
   }

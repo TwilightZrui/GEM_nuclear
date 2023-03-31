@@ -1,32 +1,50 @@
 <launch>
+  <param name="/use_sim_time" value="true" />
+  <arg name="rviz" default="false " />
 
-    <param name="/use_sim_time" value="true" />
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen"
+    clear_params="true">
+    <!-- navfn/NavfnROS -->
+    <param name="base_global_planner" value="global_planner/GlobalPlanner" />
+    <param name="planner_frequency" value="1.0" />
+    <param name="planner_patience" value="5.0" />
 
-    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen"
-        clear_params="true">
-        <param name="base_global_planner" value="global_planner/GlobalPlanner" />
-        <param name="planner_frequency" value="1.0" />
-        <param name="planner_patience" value="5.0" />
+    <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
+    <param name="controller_frequency" value="2" />
+    <param name="controller_patience" value="15.0" />
 
-        <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
-        <param name="controller_frequency" value="15.0" />
-        <param name="controller_patience" value="15.0" />
+    <!-- cost map yaml -->
+    <rosparam file="$(find pointMap_layer)/params/costmap_common_params_global.yaml" command="load"
+      ns="global_costmap" />
+    <rosparam file="$(find pointMap_layer)/params/costmap_common_params_local.yaml" command="load"
+      ns="local_costmap" />
+    <rosparam file="$(find pointMap_layer)/params/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find pointMap_layer)/params/local_costmap_params.yaml" command="load" />
 
-        <!-- cost map yaml -->
-        <rosparam file="$(find pointMap_layer)/params/costmap_common_params_global.yaml"
-            command="load" ns="global_costmap" />
-        <rosparam file="$(find pointMap_layer)/params/costmap_common_params_local.yaml"
-            command="load" ns="local_costmap" />
-        <rosparam file="$(find pointMap_layer)/params/local_costmap_params.yaml" command="load" />
-        <rosparam file="$(find pointMap_layer)/params/global_costmap_params.yaml" command="load" />
+    <!-- move base -->
+    <rosparam file="$(find pointMap_layer)/params/move_base_params.yaml" command="load" />
 
-        <!-- move base -->
-        <rosparam file="$(find pointMap_layer)/params/move_base_params.yaml" command="load" />
+    <!-- planner yaml -->
+    <rosparam file="$(find pointMap_layer)/params/teb_local_planner_params.yaml" command="load" />
+    <rosparam file="$(find pointMap_layer)/params/global_planner_params.yaml" command="load" />
+  </node>
 
-        <!-- planner yaml -->
-        <rosparam file="$(find pointMap_layer)/params/teb_local_planner_params.yaml" command="load" />
 
-    </node>
+  <group>
+    <node name="plot_trajectory_velocity" pkg="teb_local_planner"
+      type="plot_trajectory_velocity.py" output="screen" />
+
+    <!-- <node name="plot_velocity_expect_and_estimation" pkg="teb_local_planner"
+      type="plot_velocity_expect_and_estimation.py" output="screen" /> -->
+
+  </group>
+  <group
+    if="$(arg rviz)">
+    <node name="rviz" pkg="rviz" type="rviz"
+      args="-d $(find elevation_mapping_demos)/rviz/elevation_map_visualization.rviz" />
+  </group>
+
+
 </launch>
 
 <!-- <param name="global_global_planner" value="global_planner/GlobalPlanner" /> -->

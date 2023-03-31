@@ -1,16 +1,15 @@
 local_costmap:
-# global_frame: robot0/map
-# robot_base_frame: PandarQT
-
 # xb20 onboard
   global_frame: odom
-  robot_base_frame: base_footprint
+  robot_base_frame: BASE
 
   update_frequency: 5
-  publish_frequency: 5
+  publish_frequency: 2
   width: 5.0
   height: 5.0
-  resolution: 0.04
+  resolution: 0.05
   static_map: false
   rolling_window: true
 
+#如果地图的分辨率很高，这会导致大量的障碍
+#并且可能在计算独特拓扑（取决于障碍物的数量）时引入更长的计算时间或不稳定性。

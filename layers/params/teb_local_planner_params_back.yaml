@@ -1,0 +1,129 @@
+TebLocalPlannerROS:
+  odom_topic: odom
+
+  # Trajectory
+
+  teb_autosize: True
+  dt_ref: 0.3 #轨迹的时间分辨率, TEB 时间最优策略, 分辨率越高更好逼近真实
+  #规划器旨在根据期望的时间分辨率（参数dt_ref）来布置每两个连续的姿势。
+  dt_hysteresis: 0.1 #允许改变的时域解析度的浮动范围， 一般为 dt_ref 的 10% 左右;
+  max_samples: 500
+  global_plan_overwrite_orientation: False # True时，teb_local_planner 规划局部路径时会覆盖掉全局路径点的方位角。false，teb_local_planner会使用全局路径点的方位角。
+  allow_init_with_backwards_motion: False #允许在开始时想后退来执行轨迹
+  max_global_plan_lookahead_dist: 2.0 #向前规划距离 如果机器人更愿意遵循全局规划而不是在最短时间内达到（虚拟）目标，那么第一个策略可能是显着减少
+  #减少了预测/计划范围并削弱了避开障碍的能力
+  global_plan_viapoint_sep: 1 # 将参数global_plan_viapoint_sep的值设置为正值 正值激活了对点的考虑
+  global_plan_prune_distance: 1
+  exact_arc_length: False #如果为真，规划器在速度、加速度和转弯率计算中使用精确的弧长[->增加的CPU时间]，否则使用欧几里德近似。
+  feasibility_check_no_poses: 5
+  publish_feedback: False
+
+  # Robot
+  max_vel_x: 0.4
+  max_vel_x_backwards: 0.2
+  acc_lim_x: 0.3
+  max_vel_y: 0.4
+  max_vel_y_backwards: 0.2
+  acc_lim_y: 0.3
+
+  max_vel_theta: 0.3
+  acc_lim_theta: 0.5
+  min_turning_radius: 0.0 # diff-drive robot (can turn on place!)
+
+  footprint_model:
+    type: "point"
+  #  radius: 0.2 # for type "circular"
+  #  line_start: [-0.3, 0.0] # for type "line"
+  #  line_end: [0.3, 0.0] # for type "line"
+  #  front_offset: 0.2 # for type "two_circles"
+  #  front_radius: 0.2 # for type "two_circles"
+  #  rear_offset: 0.2 # for type "two_circles"
+  #  rear_radius: 0.2 # for type "two_circles"
+  #  vertices: [ [0.25, -0.05], [0.18, -0.05], [0.18, -0.18], [-0.19, -0.18], [-0.25, 0], [-0.19, 0.18], [0.18, 0.18], [0.18, 0.05], [0.25, 0.05] ] # for type "polygon"
+
+  # GoalTolerance
+
+  xy_goal_tolerance: 0.2 #目标 xy 偏移容忍度
+  yaw_goal_tolerance: 0.1 #目标 角度 偏移容忍度
+  free_goal_vel: False #允许机器人以最大速度驶向目的地
+  complete_global_plan: True
+
+  # Obstacles
+
+  # 避障距离(障碍物膨胀半径) 允许到障碍物的最小欧几里德距离
+  min_obstacle_dist: 0.1 # This value must also include our robot radius, since footprint_model is set to "point".
+  inflation_dist: 0.6
+  include_costmap_obstacles: True #costmap 中的障碍物是否被直接考虑
+  costmap_obstacles_behind_robot_dist: 1.5
+  obstacle_poses_affected: 15 #略微影响障碍物周围轨迹的平滑度
+
+  dynamic_obstacle_inflation_dist: 0.6 #动态障碍物的膨胀范围
+  include_dynamic_obstacles: True
+
+  costmap_converter_plugin: ""
+  costmap_converter_spin_thread: True
+  costmap_converter_rate: 5
+
+  # Optimization
+
+  no_inner_iterations: 5
+  no_outer_iterations: 4 # 迭代次数
+  optimization_activate: True
+  optimization_verbose: False
+  penalty_epsilon:
+    0.1 # 立即移动所有惩罚项 但要小心，因为这样做会严重影响优化结果。
+    # 对于硬约束近似，在惩罚函数中添加安全范围
+  obstacle_cost_exponent: 4
+  weight_max_vel_x: 2
+  weight_max_vel_theta: 1
+  weight_acc_lim_x: 1
+  weight_acc_lim_y: 0 #通过将相应的惩罚权重weight_acc_lim_y设置为零，可以放弃考虑加速度限制以获得更快的计算时间
+  weight_acc_lim_theta: 1
+  #参数weight_kinematics_nh指定优化器满足非全向约束的权重，并且通常设置为非全向机器人的高值。 降低值以减弱惩罚，从而允许机器人考虑非零y速度。
+  #实际的选择通常取决于应用和特定的机器人。 通常建议保持至少一个较小的值（约1）。
+  weight_kinematics_nh: 1000
+  weight_kinematics_forward_drive: 1
+  weight_kinematics_turning_radius: 1 #优化过程中，车型机器人的最小转弯半径的权重。
+  weight_optimaltime: 1 # must be > 0
+  weight_shortest_path: 0
+  weight_obstacle: 100 # 调整优化权重（单个成本的缩放）如果你选择了太高的值，优化问题会变得病态，导致不良的收敛行为。
+  weight_inflation: 0.2
+  weight_dynamic_obstacle: 10
+  weight_dynamic_obstacle_inflation: 0.2
+  weight_viapoint: 1 # 权衡 viapoint
+  weight_adapt_factor: 2
+
+  # Homotopy Class Planner
+
+  enable_homotopy_class_planning: False #True，teb会同时搜寻多条路径并选取一条更可行的。
+  enable_multithreading: True
+  max_number_classes: 4
+  selection_cost_hysteresis: 1.0
+  selection_prefer_initial_plan: 0.9
+  selection_obst_cost_scale: 100.0
+  selection_alternative_time_cost: False
+
+  roadmap_graph_no_samples: 15
+  roadmap_graph_area_width: 5
+  roadmap_graph_area_length_scale: 1.0
+  h_signature_prescaler: 0.5
+  h_signature_threshold: 0.1
+  obstacle_heading_threshold: 0.45
+  switching_blocking_period: 0.0
+  viapoints_all_candidates: True
+  #为true，则所有生成的候选轨迹与该组via-points相关联，并且每个相应的优化器尝试最小化到它们的距离。
+  # 如果该值设置为false，则仅优化属于全局计划的拓扑（等价类）的候选轨迹w.r.t. 通过点。 所有其他人都忽略了它们。
+  delete_detours_backwards: True
+  max_ratio_detours_duration_best_duration: 3.0
+  visualize_hc_graph: False
+  visualize_with_time_as_z_axis_scale: False
+  #如果该值大于0，则使用该值缩放的Z轴的时间在3D中可视化轨迹和障碍物。最适用于动态障碍。
+  # Recovery
+
+  shrink_horizon_backup: True #当规划器检测到系统异常，允许缩小时域规划范围。
+  shrink_horizon_min_duration: 10
+  oscillation_recovery: True #尝试检测和解决振荡
+  oscillation_v_eps: 0.1
+  oscillation_omega_eps: 0.1
+  oscillation_recovery_min_duration: 10
+  oscillation_filter_duration: 10

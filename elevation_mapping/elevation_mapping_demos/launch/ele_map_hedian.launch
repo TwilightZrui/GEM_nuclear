@@ -34,10 +34,10 @@
 
   <!-- X Y Z YAW PITCH ROLL -->
   <!-- 4800 dog 0329 bag -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_camera_init" args="0 0 1 0
-  0 0  map camera_init " />
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_camera_init"
+    args="0 0 1 0  0 0  map camera_init " />
   <node pkg="tf2_ros" type="static_transform_publisher"
-  name="body_to_os_sensor" args="0 0 0 0 0 0  body /robot_3/os_sensor" /> -->
+    name="body_to_os_sensor" args="0 0 0 0 0 0  body /robot_3/os_sensor" /> -->
 
   <!-- /rslidar -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_camera_init"
@@ -50,8 +50,15 @@
   /rslidar" /> -->
 
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="bpearl2lidar"
-    args=" -0.6676
-  -0.1520 -0.1171  -3.0728  -1.1497    3.0718 /os_sensor /rslidar" /> -->
+    args=" 0 0 0 0 0 0 /map /camera_init" /> -->
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="lidar2base" -->
+  <!-- args=" 0 0 0 0 0 0  /body /os_sensor" /> -->
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="bpearl2lidar"
+    args=" -0.6534 -0.0969   -0.0765  -3.1053  -1.0343    3.0674 /os_sensor /rslidar" /> -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="bpearl2lidar"
+    args="  -0.6865   0.0037 -0.0844 -3.1155     -1.0439    3.1313 /os_sensor /rslidar" />
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="bpearl2lidar" -->
+  <!-- args="     -0.6822  -0.0025  -0.0791 -3.1167    -1.0424  3.1309  /os_sensor /rslidar" /> -->
 
 
 </launch>

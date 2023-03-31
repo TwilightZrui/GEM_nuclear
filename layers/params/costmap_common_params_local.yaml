@@ -1,15 +1,13 @@
 map_type: costmap
-# global_frame: robot0/map
-# robot_base_frame: PandarQT
+global_frame: odom # xb20 onboard
+robot_base_frame: BASE
 
-# xb20 onboard
-global_frame: odom
-robot_base_frame: rslidar
-
-transform_tolerance: 1.0
+transform_tolerance: 1
 meter_scoring: true
 
-footprint: [[-0.64, -0.40], [-0.64, 0.40], [0.64, 0.40], [0.64, -0.40]]
+#机器人外形
+footprint: [[-0.65, -0.22], [-0.65, 0.22], [0.45, 0.22], [0.45, -0.22]]
+# footprint: [[-0.64, -0.40], [-0.64, 0.40], [0.64, 0.40], [0.64, -0.40]]
 footprint_padding: 0.0
 
 plugins:
@@ -18,11 +16,11 @@ plugins:
 
 elevation_layer:
   source_topic: "/robot_Z/visual_map"
-  travers_thresh: 0.7
+  travers_thresh: 1.2
 
 inflation_layer:
   enabled: true
-  inflation_radius: 0.00 # 碰撞半径
+  inflation_radius: 0.20 # 碰撞半径
   cost_scaling_factor: 0.0
 
 static_layer:
