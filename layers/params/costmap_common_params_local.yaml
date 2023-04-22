@@ -16,7 +16,7 @@ plugins:
 
 elevation_layer:
   source_topic: "/robot_Z/visual_map"
-  travers_thresh: 1.2
+  travers_thresh: 0.8
 
 inflation_layer:
   enabled: true

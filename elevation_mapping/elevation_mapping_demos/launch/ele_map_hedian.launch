@@ -18,7 +18,7 @@
     name="elevation_mapping_$(arg robot_id)" output="screen">
     <rosparam command="load" file="$(find elevation_mapping_demos)/config/robots/hedian_robot.yaml" />
     <rosparam command="load"
-      file="$(find elevation_mapping_demos)/config/elevation_maps/fxz_lio.yaml" />
+      file="$(find elevation_mapping_demos)/config/elevation_maps/submap.yaml" />
     <rosparam command="load"
       file="$(find elevation_mapping)/config/sensor_processors/velodyne_VLP16.yaml" />
     <remap from="/voxel_grid/output" to="$(arg lidar_topic)" />
@@ -55,8 +55,8 @@
   <!-- args=" 0 0 0 0 0 0  /body /os_sensor" /> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="bpearl2lidar"
     args=" -0.6534 -0.0969   -0.0765  -3.1053  -1.0343    3.0674 /os_sensor /rslidar" /> -->
-  <node pkg="tf2_ros" type="static_transform_publisher" name="bpearl2lidar"
-    args="  -0.6865   0.0037 -0.0844 -3.1155     -1.0439    3.1313 /os_sensor /rslidar" />
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="bpearl2lidar" -->
+  <!-- args="  -0.6865   0.0037 -0.0844 -3.1155     -1.0439    3.1313 /os_sensor /rslidar" /> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="bpearl2lidar" -->
   <!-- args="     -0.6822  -0.0025  -0.0791 -3.1167    -1.0424  3.1309  /os_sensor /rslidar" /> -->
 

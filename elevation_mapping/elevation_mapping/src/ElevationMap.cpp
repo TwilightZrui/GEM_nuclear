@@ -5,7 +5,7 @@
  *      Author: Peter XU
  *	 Institute: ZJU, CSC 104
  */
-
+#pragma GCC optimize(2)
 #include "elevation_mapping/ElevationMap.hpp"
 
 // Elevation Mapping
@@ -53,7 +53,7 @@ ElevationMap::ElevationMap(ros::NodeHandle nodeHandle, string robot_name)
     clear();
 
     visualMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>(robot_name + "/visual_map", 1);
-    elevationMapRawPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>(robot_name + "/elevation_map_raw", 1);
+    // elevationMapRawPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>(robot_name + "/elevation_map_raw", 1);
     VpointsPublisher_ = nodeHandle_.advertise<sensor_msgs::PointCloud2>(robot_name + "/visualpoints", 1);
     orthomosaicPublisher_ = nodeHandle_.advertise<sensor_msgs::Image>(robot_name + "/orthomosaic", 1);
     // traverImgPublisher_ = nodeHandle_.advertise<sensor_msgs::Image>("/robot_centric_image", 1); // traver image 221123 twilight
@@ -104,8 +104,8 @@ ElevationMap::show(ros::Time timeStamp, string robot_name,
         grid_map::Position position;
         visualMap_.getPosition(*iterator, position);
 
-        // if (position.x() < 1 && position.x() > -2 && position.y() < 1 &&
-        //     position.y() > -1) {
+        // if (position.x() < 1 && position.x() > -2 && position.y() < 2 &&
+        //     position.y() > -2) {
         //     visualMap_.at("elevation", *iterator) = 0.0;
         //     visualMap_.at("traver", *iterator) = 1.0;
         // }

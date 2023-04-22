@@ -4,10 +4,10 @@
   <!-- <arg name="input_lidar_topic" default="/os_cloud_node3/points" /> -->
 
   <!-- jueyingpro gazebo  -->
-  <!-- <arg name="input_lidar_topic" default="/velodyne_points_32" /> -->
+  <arg name="input_lidar_topic" default="/velodyne_points_32" />
 
   <!-- bpearl onboard -->
-  <arg name="input_lidar_topic" default="/rslidar_points" />
+  <!-- <arg name="input_lidar_topic" default="/rslidar_points" /> -->
   <arg name="output_lidar_topic" default="/robot_Z/pointcloud_filtered" />
 
   <node pkg="nodelet" type="nodelet" name="pcl_manager_0g_x" args="manager" output="screen" />

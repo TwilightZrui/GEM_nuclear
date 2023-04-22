@@ -13,9 +13,9 @@ plugins:
   - { name: inflation_layer, type: "costmap_2d::InflationLayer" }
 
 points_layer:
-  enabled: true
+  enabled: z
   source_topic: "/robot_Z/history_point"
-  travers_thresh: -100
+  travers_thresh: -1000
 
 inflation_layer:
   enabled: true

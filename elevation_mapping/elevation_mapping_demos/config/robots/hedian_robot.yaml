@@ -24,11 +24,11 @@ robot_name: "robot_Z"
 # robot_base_frame_id: "/rslidar"
 # track_point_frame_id: "/rslidar"
 
-# x20 dog gazebo sim
-# map_frame_id: "odom"
-# sensor_frame_id: "/velodyne2"
-# robot_base_frame_id: "/velodyne2"
-# track_point_frame_id: "/velodyne2"
+# # x20 dog gazebo sim
+map_frame_id: "odom"
+sensor_frame_id: "/velodyne2"
+robot_base_frame_id: "/velodyne2"
+track_point_frame_id: "/velodyne2"
 
 # map_frame_id: "camera_init"
 # sensor_frame_id: "/body"
@@ -36,10 +36,10 @@ robot_name: "robot_Z"
 # track_point_frame_id: "/body"
 
 # xb20 onboard
-map_frame_id: "odom"
-sensor_frame_id: "/os_sensor"
-robot_base_frame_id: "/base_footprint"
-track_point_frame_id: "/os_sensor"
+# map_frame_id: "odom"
+# sensor_frame_id: "/os_sensor"
+# robot_base_frame_id: "/base_footprint"
+# track_point_frame_id: "/os_sensor"
 
 robot_pose_with_covariance_topic: ""
 robot_pose_cache_size: 200
